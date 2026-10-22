@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Dez ferramentas úteis em um só lugar: contador de dias, relógio, calculadora, bloco de notas, cronômetro, temporizador, conversores, gerador de senha e lista de tarefas.">
+  <meta name="theme-color" content="#120e10">
+  <title>Ferramentas Úteis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="ferramentas.css">
+</head>
+<body>
+  <main class="page narrow">
+
+    <header class="hero">
+      <span class="kicker">Caixa de ferramentas</span>
+      <h1>Ferramentas úteis</h1>
+      <nav class="topnav" aria-label="Outras páginas">
+        <a class="chip" href="index.html">← Início</a>
+        <a class="chip" href="cheklist.html">✅ Checklist</a>
+        <a class="chip" href="calendario 2024.html">📅 Calendário</a>
+        <a class="chip" href="água.html">💧 Tela de água</a>
+      </nav>
+    </header>
+
+    <div class="tabs" role="tablist" aria-label="Ferramentas">
+      <button class="tab" role="tab" id="tab-dias" aria-controls="dias" data-tab="dias">📆 Contador de dias</button>
+      <button class="tab" role="tab" id="tab-relogio" aria-controls="relogio" data-tab="relogio">🕒 Relógio</button>
+      <button class="tab" role="tab" id="tab-calculadora" aria-controls="calculadora" data-tab="calculadora">🧮 Calculadora</button>
+      <button class="tab" role="tab" id="tab-notas" aria-controls="notas" data-tab="notas">📝 Bloco de notas</button>
+      <button class="tab" role="tab" id="tab-cronometro" aria-controls="cronometro" data-tab="cronometro">⏱️ Cronômetro</button>
+      <button class="tab" role="tab" id="tab-temporizador" aria-controls="temporizador" data-tab="temporizador">⏳ Temporizador</button>
+      <button class="tab" role="tab" id="tab-temperatura" aria-controls="temperatura" data-tab="temperatura">🌡️ Temperatura</button>
+      <button class="tab" role="tab" id="tab-senha" aria-controls="senha" data-tab="senha">🔑 Gerador de senha</button>
+      <button class="tab" role="tab" id="tab-unidades" aria-controls="unidades" data-tab="unidades">📏 Unidades</button>
+      <button class="tab" role="tab" id="tab-tarefas" aria-controls="tarefas" data-tab="tarefas">✔️ Tarefas</button>
+    </div>
+
+    <!-- 1. Contador de dias -->
+    <section class="card panel" id="dias" role="tabpanel" aria-labelledby="tab-dias" hidden>
+      <h2>Contador de dias</h2>
+      <p class="hint">Compare duas datas e veja quanto tempo passou e quanto falta.</p>
+      <div class="stack">
+        <div class="row two">
+          <div class="control"><label for="dataInicial">Data inicial</label><input type="date" id="dataInicial"></div>
+          <div class="control"><label for="dataFinal">Data final</label><input type="date" id="dataFinal"></div>
+        </div>
+        <div class="btn-row"><button class="btn" id="diasCalcular" type="button">Calcular</button></div>
+        <p class="result error" id="diasErro" role="alert"></p>
+        <div class="stats" id="diasStats" hidden>
+          <div class="stat"><strong id="diasPassados">0</strong><span>dias desde a data inicial</span></div>
+          <div class="stat"><strong id="diasRestantes">0</strong><span>dias até a data final</span></div>
+          <div class="stat"><strong id="diasTotal">0</strong><span>dias entre as duas datas</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Relógio -->
+    <section class="card panel" id="relogio" role="tabpanel" aria-labelledby="tab-relogio" hidden>
+      <h2>Relógio atual</h2>
+      <p class="hint">Hora e data do seu dispositivo, atualizadas a cada segundo.</p>
+      <div class="display" id="relogioHora">--:--:--</div>
+      <p class="result" id="relogioData"></p>
+    </section>
+
+    <!-- 3. Calculadora -->
+    <section class="card panel" id="calculadora" role="tabpanel" aria-labelledby="tab-calculadora" hidden>
+      <h2>Calculadora</h2>
+      <p class="hint">Aceita <code>+ - * / % ^</code>, parênteses e vírgula decimal. Ex.: <code>2+3*(4-1)</code></p>
+      <div class="stack">
+        <div class="control"><label for="calcInput">Expressão</label><input type="text" id="calcInput" placeholder="2+3*4" autocomplete="off" inputmode="text"></div>
+        <div class="btn-row"><button class="btn" id="calcBtn" type="button">Calcular</button><button class="btn ghost" id="calcLimpar" type="button">Limpar</button></div>
+        <div class="display small" id="calcResultado" aria-live="polite">—</div>
+      </div>
+    </section>
+
+    <!-- 4. Bloco de notas -->
+    <section class="card panel" id="notas" role="tabpanel" aria-labelledby="tab-notas" hidden>
+      <h2>Bloco de notas</h2>
+      <p class="hint">Salvo automaticamente neste navegador.</p>
+      <div class="stack">
+        <div class="control"><label for="notaArea">Anotações</label><textarea id="notaArea" placeholder="Digite suas anotações aqui..."></textarea></div>
+        <p class="status" id="notaStatus" aria-live="polite"></p>
+        <div class="btn-row"><button class="btn ghost" id="notaLimpar" type="button">Limpar nota</button></div>
+      </div>
+    </section>
+
+    <!-- 5. Cronômetro -->
+    <section class="card panel" id="cronometro" role="tabpanel" aria-labelledby="tab-cronometro" hidden>
+      <h2>Cronômetro</h2>
+      <p class="hint">Marque o tempo com precisão de centésimos.</p>
+      <div class="stack">
+        <div class="display" id="cronoDisplay" role="timer">00:00:00.00</div>
+        <div class="btn-row center">
+          <button class="btn" id="cronoStart" type="button">Iniciar</button>
+          <button class="btn ghost" id="cronoReset" type="button">Zerar</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Temporizador -->
+    <section class="card panel" id="temporizador" role="tabpanel" aria-labelledby="tab-temporizador" hidden>
+      <h2>Temporizador</h2>
+      <p class="hint">Defina o tempo, comece e receba um aviso sonoro ao final.</p>
+      <div class="stack">
+        <div class="row two">
+          <div class="control"><label for="timerMin">Minutos</label><input type="number" id="timerMin" min="0" max="999" value="5" inputmode="numeric"></div>
+          <div class="control"><label for="timerSec">Segundos</label><input type="number" id="timerSec" min="0" max="59" value="0" inputmode="numeric"></div>
+        </div>
+        <div class="chips" aria-label="Atalhos">
+          <button class="chip" type="button" data-preset="60">1 min</button>
+          <button class="chip" type="button" data-preset="300">5 min</button>
+          <button class="chip" type="button" data-preset="600">10 min</button>
+          <button class="chip" type="button" data-preset="1500">25 min</button>
+        </div>
+        <div class="display" id="timerDisplay" role="timer">00:05:00</div>
+        <div class="btn-row center">
+          <button class="btn" id="timerStart" type="button">Iniciar</button>
+          <button class="btn ghost" id="timerReset" type="button">Zerar</button>
+        </div>
+        <p class="result error" id="timerErro" role="alert"></p>
+      </div>
+    </section>
+
+    <!-- 7. Temperatura -->
+    <section class="card panel" id="temperatura" role="tabpanel" aria-labelledby="tab-temperatura" hidden>
+      <h2>Conversor de temperatura</h2>
+      <p class="hint">Digite em qualquer campo e os outros se atualizam.</p>
+      <div class="row three">
+        <div class="control"><label for="tempC">Celsius (°C)</label><input type="number" id="tempC" step="any" placeholder="25" inputmode="decimal"></div>
+        <div class="control"><label for="tempF">Fahrenheit (°F)</label><input type="number" id="tempF" step="any" placeholder="77" inputmode="decimal"></div>
+        <div class="control"><label for="tempK">Kelvin (K)</label><input type="number" id="tempK" step="any" placeholder="298.15" inputmode="decimal"></div>
+      </div>
+    </section>
+
+    <!-- 8. Gerador de senha -->
+    <section class="card panel" id="senha" role="tabpanel" aria-labelledby="tab-senha" hidden>
+      <h2>Gerador de senha</h2>
+      <p class="hint">Gerada no seu navegador com aleatoriedade criptográfica; nada é enviado a lugar algum.</p>
+      <div class="stack">
+        <div class="control">
+          <label for="senhaTamanho">Tamanho: <strong id="senhaTamanhoValor">16</strong></label>
+          <input type="range" id="senhaTamanho" min="6" max="64" value="16">
+        </div>
+        <div class="checks">
+          <label><input type="checkbox" id="senhaMaius" checked> Maiúsculas</label>
+          <label><input type="checkbox" id="senhaMinus" checked> Minúsculas</label>
+          <label><input type="checkbox" id="senhaNum" checked> Números</label>
+          <label><input type="checkbox" id="senhaSimb" checked> Símbolos</label>
+        </div>
+        <div class="display small" id="senhaGerada" aria-live="polite">—</div>
+        <div class="btn-row center">
+          <button class="btn" id="senhaGerar" type="button">Gerar senha</button>
+          <button class="btn ghost" id="senhaCopiar" type="button">Copiar</button>
+        </div>
+        <p class="result" id="senhaStatus" role="status"></p>
+      </div>
+    </section>
+
+    <!-- 9. Unidades -->
+    <section class="card panel" id="unidades" role="tabpanel" aria-labelledby="tab-unidades" hidden>
+      <h2>Conversor de unidades</h2>
+      <p class="hint">Quilômetros e milhas, quilos e libras, metros e pés. Digite dos dois lados.</p>
+      <div class="stack">
+        <div class="control">
+          <label for="unidadeTipo">Conversão</label>
+          <select id="unidadeTipo">
+            <option value="km-mi">Quilômetros ⇄ Milhas</option>
+            <option value="kg-lb">Quilos ⇄ Libras</option>
+            <option value="m-ft">Metros ⇄ Pés</option>
+          </select>
+        </div>
+        <div class="row two">
+          <div class="control"><label for="unidadeA" id="unidadeALabel">Quilômetros</label><input type="number" id="unidadeA" step="any" placeholder="10" inputmode="decimal"></div>
+          <div class="control"><label for="unidadeB" id="unidadeBLabel">Milhas</label><input type="number" id="unidadeB" step="any" placeholder="6,21" inputmode="decimal"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10. Tarefas -->
+    <section class="card panel" id="tarefas" role="tabpanel" aria-labelledby="tab-tarefas" hidden>
+      <h2>Lista de tarefas</h2>
+      <p class="hint">Clique na tarefa para concluir. Tudo fica salvo neste navegador.</p>
+      <div class="stack">
+        <form class="add-row" id="tarefaForm">
+          <input type="text" id="tarefaInput" placeholder="Digite uma tarefa" maxlength="200" aria-label="Nova tarefa" autocomplete="off">
+          <button class="btn" type="submit">Adicionar</button>
+        </form>
+        <ul class="todo" id="listaTarefas"></ul>
+        <p class="empty" id="tarefasVazio">Nenhuma tarefa ainda.</p>
+        <div class="btn-row"><button class="btn ghost" id="tarefasLimpar" type="button">Limpar concluídas</button></div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="ferramentas.js"></script>
+</body>
+</html>
