@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Contador de Tempo - Tela de Água</title>
+    <style>
+        body {
+            background-image: url("https://i.pinimg.com/originals/ef/08/d1/ef08d117f320d1e142f79c4413e0a2bf.gif");
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 50px;
+            color: red;
+            font-size: 25px;
+            font-style: oblique;
+        }
+
+        .countdown {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .button {
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin-top: 20px;
+            cursor: pointer;
+            background-image: url("https://mir-s3-cdn-cf.behance.net/project_modules/max_632/cf563c98856813.5ee5f89f42006.gif");
+        }
+
+        .button:hover {
+            background-color: #3e8e41;
+        }
+
+        h2 {
+            font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+            color: white;
+        }
+
+        .water-container {
+            font-family: monospace;
+            font-size: 24px;
+            margin-top: 50px;
+            text-align: center;
+            white-space: pre;
+        }
+
+        #lastWaterTime {
+            margin-top: 20px;
+            font-size: 20px;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div>
+            <label for="hour">Hora (no formato 24h) que bebeu água:</label>
+            <input type="text" id="waterTime" placeholder="hh:mm:ss">
+        </div>
+        <div class="countdown"></div>
+        <button class="button" onclick="startCountdown()">Começar</button>
+        <div id="lastWaterTime"></div>
+    </div>
+
+    <div class="water-container">
+
+    </div>
+
+    <script>
+        function startCountdown() {
+            var waterTimeInput = document.querySelector("#waterTime").value;
+            var waterTime = new Date().setHours(waterTimeInput.substring(0, 2), waterTimeInput.substring(3, 5), waterTimeInput.substring(6, 8), 0);
+            if (isNaN(waterTime)) {
+                alert("Por favor, insira uma hora válida no formato 'hh:mm:ss'!");
+                return;
+            }
+
+            var x = setInterval(function () {
+                var now = new Date().getTime();
+                var distance = now - waterTime;
+
+                var hours = Math.floor(distance / (1000 * 60 * 60));
+                var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                document.querySelector(".countdown").innerHTML = hours + "h " + minutes + "m " + seconds + "s ";
+
+                if (distance < 0) {
+                    clearInterval(x);
+                    document.querySelector(".countdown").innerHTML = "deu o tempo, coloque outro horário para calcularmos! :)";
+                    document.getElementById("myAudio").play(); // reproduz o som quando o tempo expirar
+                }
+            }, 1000);
+
+            var currentTime = new Date();
+            var lastWaterTime = new Date(waterTime);
+            var timeDiff = currentTime.getTime() - lastWaterTime.getTime();
+
+            var hoursDiff = Math.floor(timeDiff / (1000 * 60 * 60));
+            var minutesDiff = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+            var secondsDiff = Math.floor((timeDiff % (1000 * 60)) / 1000);
+
+            document.querySelector("#lastWaterTime").innerHTML = "Tempo desde o último consumo de água: " + hoursDiff + "h " + minutesDiff + "m " + secondsDiff + "s";
+        }
+    </script>
+</body>
+
+</html>

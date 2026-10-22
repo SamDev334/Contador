@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ferramentas Úteis</title>
+  <style>
+    /* Estilos gerais */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f2f2f2;
+    }
+    .tabs {
+      overflow: hidden;
+      background-color: #333;
+    }
+    .tabs button {
+      background-color: inherit;
+      float: left;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      padding: 14px 16px;
+      color: #f2f2f2;
+      transition: 0.3s;
+      font-size: 17px;
+    }
+    .tabs button:hover {
+      background-color: #575757;
+    }
+    .tabs button.active {
+      background-color: #04AA6D;
+    }
+    .tabcontent {
+      display: none;
+      padding: 20px;
+      animation: fadeEffect 0.5s;
+      background-color: #fff;
+      min-height: 400px;
+    }
+    @keyframes fadeEffect {
+      from {opacity: 0;}
+      to {opacity: 1;}
+    }
+    /* Estilos para cada ferramenta */
+    .ferramenta-container {
+      max-width: 600px;
+      margin: auto;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background: #fafafa;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin: 10px 0 5px;
+    }
+    input[type="date"],
+    input[type="text"],
+    input[type="number"],
+    textarea {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+    }
+    button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 3px;
+      background-color: #04AA6D;
+      color: white;
+      cursor: pointer;
+      margin: 5px 0;
+    }
+    button:hover {
+      background-color: #039f64;
+    }
+    /* Lista de Tarefas */
+    #listaTarefas {
+      list-style: none;
+      padding: 0;
+    }
+    #listaTarefas li {
+      padding: 8px;
+      background: #e9e9e9;
+      margin-bottom: 5px;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    #listaTarefas li.completada {
+      text-decoration: line-through;
+      color: #777;
+      background: #cfcfcf;
+    }
+    /* Exibição de resultados */
+    .resultado {
+      margin-top: 15px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Barra de Navegação (Tabs) -->
+  <div class="tabs">
+    <button class="tablinks" onclick="openTool(event, 'Dias')" id="defaultTab">Contador de Dias</button>
+    <button class="tablinks" onclick="openTool(event, 'Relogio')">Relógio</button>
+    <button class="tablinks" onclick="openTool(event, 'Calculadora')">Calculadora</button>
+    <button class="tablinks" onclick="openTool(event, 'BlocoNotas')">Bloco de Notas</button>
+    <button class="tablinks" onclick="openTool(event, 'Cronometro')">Cronômetro</button>
+    <button class="tablinks" onclick="openTool(event, 'Temporizador')">Temporizador</button>
+    <button class="tablinks" onclick="openTool(event, 'ConversorTemperatura')">Conversor de Temperatura</button>
+    <button class="tablinks" onclick="openTool(event, 'GeradorSenha')">Gerador de Senha</button>
+    <button class="tablinks" onclick="openTool(event, 'ConversorUnidades')">Conversor de Unidades</button>
+    <button class="tablinks" onclick="openTool(event, 'ListaTarefas')">Lista de Tarefas</button>
+  </div>
+
+  <!-- Tool 1: Contador de Dias -->
+  <div id="Dias" class="tabcontent">
+    <div class="ferramenta-container">
+      <h2>Contador de Dias</h2>
+      <label for="dataInicial">Data Inicial:</label>
+      <input type="date" id="dataInicial">
+      <label for="dataFinal">Data Final:</label>
+      <input type="date" id="dataFinal">
+      <button onclick="calcularDias()">Calcular</button>
+      <div class="resultado">
+        <p id="diasPassados"></p>
+        <p id="diasRestantes"></p>
+        <p id="tempoRestante"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tool 2: Relógio -->
+  <div id="Relogio" class="tabcontent">
+    <div class="ferramenta-container">
+      <h2>Relógio Atual</h2>
+      <p id="relogioAtual" style="font-size:24px;"></p>
+    </div>
+  </div>
+
+  <!-- Tool 3: Calculadora Funcional -->
+  <div id="Calculadora" class="tabcontent">
+    <div class="ferramenta-container">
+      <h2>Calculadora</h2>
+      <input type="text" id="calcInput" placeholder="Digite a expressão (ex.: 2+3*4)">
+      <button onclick="calcularExpressao()">Calcular</button>
+      <p id="calcResultado" class="resultado"></p>
+    </div>
+  </div>
+
+  <!-- Tool 4: Bloco de Notas -->
+  <div id="BlocoNotas" class="tabcontent">
+    <div class="ferramenta-container">
+      <h2>Bloco de Notas</h2>
+      <textarea id="notaArea" rows="10" placeholder="Digite suas anotações aqui..."></textarea>
+      <button onclick="salvarNota()">Salvar Nota</button>
+      <button onclick="limparNota()">Limpar Nota</button>
+    </div>
+  </div>
+
+  <!-- Tool 5: Cronômetro -->
+  <div id="Cronometro" class="tabcontent">
+    <div class="ferramenta-container">
+      <h2>Cronômetro</h2>
+      <p id="cronometroDisplay" style="font-size:24px;">00:00:00</p>
+      <button onclick="iniciarCronometro()">Iniciar</button>
+      <button onclick="pararCronometro()">Parar</button>
+      <button onclick="resetarCronometro()">Resetar</button>
+    </div>
+  </div>
+
+  <!-- Tool 6: Temporizador (Countdown Timer) -->
+  <div id="Temporizador" class="tabcontent">
+    <div class="ferramenta-container">
+      <h2>Temporizador</h2>
+      <label for="temporizadorInput">Tempo em segundos:</label>
+      <input type="number" id="temporizadorInput" placeholder="Ex.: 120">
+      <button onclick="iniciarTemporizador()">Iniciar Temporizador</button>
+      <p id="temporizadorDisplay" style="font-size:24px;" class="resultado"></p>
+    </div>
+  </div>
+
+  <!-- Tool 7: Conversor de Temperatura -->
+  <div id="ConversorTemperatura" class="tabcontent">
+    <div class="ferramenta-container">
+      <h2>Conversor de Temperatura</h2>
+      <label for="tempCelsius">Temperatura em °C:</label>
+      <input type="number" id="tempCelsius" placeholder="Ex.: 25">
+      <button onclick="converterTemperatura()">Converter</button>
+      <p id="tempResultado" class="resultado"></p>
+    </div>
+  </div>
+
+  <!-- Tool 8: Gerador de Senha -->
+  <div id="GeradorSenha" class="tabcontent">
+    <div class="ferramenta-container">
+      <h2>Gerador de Senha</h2>
+      <label for="senhaTamanho">Tamanho da Senha:</label>
+      <input type="number" id="senhaTamanho" placeholder="Ex.: 12">
+      <button onclick="gerarSenha()">Gerar Senha</button>
+      <p id="senhaGerada" class="resultado"></p>
+    </div>
+  </div>
+
+  <!-- Tool 9: Conversor de Unidades (Km para Milhas) -->
+  <div id="ConversorUnidades" class="tabcontent">
+    <div class="ferramenta-container">
+      <h2>Conversor de Unidades</h2>
+      <label for="kmInput">Quilômetros:</label>
+      <input type="number" id="kmInput" placeholder="Ex.: 10">
+      <button onclick="converterUnidades()">Converter para Milhas</button>
+      <p id="unidadesResultado" class="resultado"></p>
+    </div>
+  </div>
+<!-- Tool 10: Lista de Tarefas -->
+<div id="ListaTarefas" class="tabcontent">
+    <div class="ferramenta-container">
+      <h2>Lista de Tarefas</h2>
+      <input type="text" id="tarefaInput" placeholder="Digite uma tarefa">
+      <button onclick="adicionarTarefa()">Adicionar Tarefa</button>
+      <button onclick="limparTarefas()">Limpar Tarefas</button>
+      <ul id="listaTarefas"></ul>
+    </div>
+  </div>
+
+  <script>
+    // Função para alternar entre as abas
+    function openTool(evt, toolName) {
+      var i, tabcontent, tablinks;
+      tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+      }
+      tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+      document.getElementById(toolName).style.display = "block";
+      evt.currentTarget.className += " active";
+    }
+    // Abrir a primeira aba por padrão
+    document.getElementById("defaultTab").click();
+
+    /* Ferramenta 1: Contador de Dias */
+    function calcularDias() {
+  // Obter os valores dos inputs
+  var dataInicialStr = document.getElementById("dataInicial").value;
+  var dataFinalStr = document.getElementById("dataFinal").value;
+
+ 
+
+  // Converter as strings para objetos Date
+  var dataInicial = new Date(dataInicialStr);
+  var dataFinal = new Date(dataFinalStr);
+  var agora = new Date();
+
+ 
+
+  var diasPassados = Math.floor((agora - dataInicial) / (1000 * 60 * 60 * 24));
+  var diasRestantes = Math.floor((dataFinal - agora) / (1000 * 60 * 60 * 24));
+  var tempoRestante = dataFinal - agora;
+  var segundos = Math.floor(tempoRestante / 1000) % 60;
+  var minutos = Math.floor(tempoRestante / (1000 * 60)) % 60;
+  var horas = Math.floor(tempoRestante / (1000 * 60 * 60)) % 24;
+
+  document.getElementById("diasPassados").innerText = "Dias passados: " + diasPassados;
+  document.getElementById("diasRestantes").innerText = "Dias restantes: " + diasRestantes;
+  document.getElementById("tempoRestante").innerText = "Tempo restante: " + horas + "h " + minutos + "m " + segundos + "s";
+}
+
+
+    /* Ferramenta 2: Relógio */
+    function atualizarRelogio(){
+      var now = new Date();
+      var diaSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+      var mes = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+      var dataFormatada = diaSemana[now.getDay()] + ', ' + now.getDate() + ' de ' + mes[now.getMonth()] + ' de ' + now.getFullYear() + ', ' +
+                           (now.getHours()<10?'0'+now.getHours():now.getHours()) + ':' +
+                           (now.getMinutes()<10?'0'+now.getMinutes():now.getMinutes()) + ':' +
+                           (now.getSeconds()<10?'0'+now.getSeconds():now.getSeconds());
+      document.getElementById("relogioAtual").textContent = dataFormatada;
+    }
+
+    /* Ferramenta 3: Calculadora */
+    function calcularExpressao(){
+      try {
+        var expr = document.getElementById("calcInput").value;
+        var resultado = eval(expr);
+        document.getElementById("calcResultado").innerText = "Resultado: " + resultado;
+      } catch(e) {
+        document.getElementById("calcResultado").innerText = "Erro na expressão";
+      }
+    }
+
+    /* Ferramenta 4: Bloco de Notas */
+    function salvarNota(){
+      var conteudo = document.getElementById("notaArea").value;
+      localStorage.setItem("blocoNotas", conteudo);
+      alert("Nota salva com sucesso!");
+    }
+    function carregarNota(){
+      var conteudo = localStorage.getItem("blocoNotas");
+      if(conteudo){
+        document.getElementById("notaArea").value = conteudo;
+      }
+    }
+    function limparNota(){
+      document.getElementById("notaArea").value = "";
+      localStorage.removeItem("blocoNotas");
+    }
+    carregarNota();
+
+    /* Ferramenta 5: Cronômetro */
+    var cronometroInterval;
+    var tempoCronometro = 0;
+    function iniciarCronometro(){
+      clearInterval(cronometroInterval);
+      cronometroInterval = setInterval(function(){
+        tempoCronometro++;
+        var horas = Math.floor(tempoCronometro / 3600);
+        var minutos = Math.floor((tempoCronometro % 3600) / 60);
+        var segundos = tempoCronometro % 60;
+        document.getElementById("cronometroDisplay").innerText = 
+            (horas < 10 ? "0" + horas : horas) + ":" + 
+            (minutos < 10 ? "0" + minutos : minutos) + ":" + 
+            (segundos < 10 ? "0" + segundos : segundos);
+      }, 1000);
+    }
+    function pararCronometro(){
+      clearInterval(cronometroInterval);
+    }
+    function resetarCronometro(){
+      clearInterval(cronometroInterval);
+      tempoCronometro = 0;
+      document.getElementById("cronometroDisplay").innerText = "00:00:00";
+    }
+
+    /* Ferramenta 6: Temporizador */
+    var temporizadorInterval;
+    function iniciarTemporizador(){
+      var inputSegundos = parseInt(document.getElementById("temporizadorInput").value);
+      if(isNaN(inputSegundos) || inputSegundos < 0){
+        alert("Insira um valor válido em segundos.");
+        return;
+      }
+      clearInterval(temporizadorInterval);
+      var tempoRestante = inputSegundos;
+      temporizadorInterval = setInterval(function(){
+        if(tempoRestante <= 0){
+          clearInterval(temporizadorInterval);
+          document.getElementById("temporizadorDisplay").innerText = "Tempo esgotado!";
+        } else {
+          var horas = Math.floor(tempoRestante / 3600);
+          var minutos = Math.floor((tempoRestante % 3600) / 60);
+          var segundos = tempoRestante % 60;
+          document.getElementById("temporizadorDisplay").innerText = 
+              (horas < 10 ? "0" + horas : horas) + ":" +
+              (minutos < 10 ? "0" + minutos : minutos) + ":" +
+              (segundos < 10 ? "0" + segundos : segundos);
+          tempoRestante--;
+        }
+      }, 1000);
+    }
+
+    /* Ferramenta 7: Conversor de Temperatura */
+    function converterTemperatura(){
+      var celsius = parseFloat(document.getElementById("tempCelsius").value);
+      if(isNaN(celsius)){
+        alert("Insira um valor válido.");
+        return;
+      }
+      var fahrenheit = (celsius * 9/5) + 32;
+      document.getElementById("tempResultado").innerText = celsius + "°C = " + fahrenheit.toFixed(2) + "°F";
+    }
+
+    /* Ferramenta 8: Gerador de Senha */
+    function gerarSenha(){
+      var tamanho = parseInt(document.getElementById("senhaTamanho").value);
+      if(isNaN(tamanho) || tamanho <= 0){
+        alert("Insira um tamanho válido para a senha.");
+        return;
+      }
+      var caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
+      var senha = "";
+      for(var i = 0; i < tamanho; i++){
+        senha += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+      }
+      document.getElementById("senhaGerada").innerText = "Senha: " + senha;
+    }
+
+    /* Ferramenta 9: Conversor de Unidades (Km para Milhas) */
+    function converterUnidades(){
+      var km = parseFloat(document.getElementById("kmInput").value);
+      if(isNaN(km)){
+        alert("Insira um valor válido em quilômetros.");
+        return;
+      }
+      var milhas = km * 0.621371;
+      document.getElementById("unidadesResultado").innerText = km + " km = " + milhas.toFixed(2) + " milhas";
+    }
+
+   // Função para carregar as tarefas salvas no localStorage
+   function carregarTarefas() {
+    var tarefasSalvas = localStorage.getItem("tarefas");
+    if (tarefasSalvas) {
+      var tarefas = JSON.parse(tarefasSalvas);
+      var listaTarefas = document.getElementById("listaTarefas");
+      listaTarefas.innerHTML = "";
+      tarefas.forEach(function(tarefa) {
+        adicionarTarefaNaLista(tarefa.texto, tarefa.completada);
+      });
+    }
+  }
+
+  // Função auxiliar para adicionar um item à lista e salvar
+  function adicionarTarefaNaLista(tarefaText, completada) {
+    var li = document.createElement("li");
+    li.innerText = tarefaText;
+    if (completada) {
+      li.classList.add("completada");
+    }
+    li.onclick = function(){
+      this.classList.toggle("completada");
+      salvarTarefas();
+    }
+    document.getElementById("listaTarefas").appendChild(li);
+    salvarTarefas();
+  }
+
+  // Função para adicionar uma nova tarefa
+  function adicionarTarefa(){
+    var tarefaInput = document.getElementById("tarefaInput");
+    var tarefaText = tarefaInput.value.trim();
+    if(tarefaText === ""){
+      alert("Insira uma tarefa válida.");
+      return;
+    }
+    adicionarTarefaNaLista(tarefaText, false);
+    tarefaInput.value = "";
+  }
+
+  // Função para salvar todas as tarefas atuais no localStorage
+  function salvarTarefas(){
+    var listaTarefas = document.getElementById("listaTarefas").getElementsByTagName("li");
+    var tarefas = [];
+    for (var i = 0; i < listaTarefas.length; i++){
+      tarefas.push({
+        texto: listaTarefas[i].innerText,
+        completada: listaTarefas[i].classList.contains("completada")
+      });
+    }
+    localStorage.setItem("tarefas", JSON.stringify(tarefas));
+  }
+
+  // Função para limpar todas as tarefas da lista e do localStorage
+  function limparTarefas(){
+    if(confirm("Deseja realmente limpar todas as tarefas?")){
+      document.getElementById("listaTarefas").innerHTML = "";
+      localStorage.removeItem("tarefas");
+    }
+  }
+
+  // Carrega as tarefas salvas ao carregar a página
+  window.onload = function() {
+    carregarTarefas();
+  }
+  </script>
+</body>
+</html>

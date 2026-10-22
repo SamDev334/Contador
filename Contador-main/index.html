@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Contagem regressiva, contador de dias, contador de cliques e reflexões do código Bushidō.">
+  <meta name="theme-color" content="#120e10">
+  <title>Contador de Tempo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <main class="page">
+
+    <header class="hero">
+      <span class="kicker">Contador de tempo</span>
+      <h1>Even Though I Walk Through the Valley of the Shadow of Death I Fear No Evil. (SuperTruck Edition)</h1>
+      <nav class="topnav" aria-label="Outras páginas">
+        <a class="chip" href="TMBCALC.html">🧮 Ferramentas úteis</a>
+        <a class="chip" href="cheklist.html">✅ Checklist</a>
+        <a class="chip" href="calendario 2024.html">📅 Calendário</a>
+        <a class="chip" href="água.html">💧 Tela de água</a>
+      </nav>
+    </header>
+
+    <div class="grid-2">
+      <!-- Contagem regressiva -->
+      <section class="card" aria-labelledby="t-countdown">
+        <h2 id="t-countdown">Tempo restante</h2>
+        <p class="hint">Informe a hora (formato 12h) e acompanhe quanto falta.</p>
+        <div class="field">
+          <label for="hour">Horário final</label>
+          <input type="text" id="hour" placeholder="08:30:00 PM" autocomplete="off" inputmode="text" aria-describedby="hourError">
+          <button class="btn" id="startButton" type="button">Começar</button>
+        </div>
+        <p class="form-error" id="hourError" role="alert"></p>
+        <div class="countdown" role="timer" aria-live="off"></div>
+        <p class="countdown-label" id="countdownCaption"></p>
+        <div class="card-actions">
+          <button class="btn ghost" id="stopButton" type="button" hidden>Parar</button>
+        </div>
+        <audio id="myAudio" src="sons/Still Beating [ ezmp3.cc ].mp3" preload="none"></audio>
+      </section>
+
+      <!-- Dias até uma data -->
+      <section class="card" aria-labelledby="t-days">
+        <h2 id="t-days">Dias faltando até…</h2>
+        <p class="hint">Escolha uma data e descubra quantos dias faltam.</p>
+        <div class="field">
+          <label for="targetDate">Data</label>
+          <input type="date" id="targetDate">
+          <button class="btn" id="calcButton" type="button">Calcular</button>
+        </div>
+        <p class="days-result" id="daysCounter" role="status" hidden></p>
+      </section>
+    </div>
+
+    <!-- Contador de cliques -->
+    <section class="card clicker" aria-labelledby="t-click">
+      <h2 id="t-click">Contador de cliques</h2>
+      <p class="hint">Metas especiais em 10, 50 e 100 cliques.</p>
+      <button class="btn" id="clickButton" type="button">Clique aqui</button>
+      <span class="count" id="clickCount" aria-live="polite">0 cliques</span>
+    </section>
+
+    <!-- Mídia -->
+    <section class="media" aria-label="Vídeo e imagem">
+      <iframe src="https://www.youtube.com/embed/jfKfPfyJRdk?si=0R2kxeDPlM6DTkVq" title="Vídeo do YouTube" loading="lazy"
+        allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      <img src="https://i.postimg.cc/VLX0Srh5/musashi-musashi-miyamoto-1.gif" alt="Miyamoto Musashi" loading="lazy">
+    </section>
+
+    <!-- Relógio do clima -->
+    <section class="climate" aria-label="Relógio do clima">
+      <climate-clock></climate-clock>
+    </section>
+
+    <!-- Bushidō -->
+    <section class="card" aria-labelledby="t-bushido">
+      <h2 id="t-bushido">Códigos de Ética Samurais (Bushidô)</h2>
+      <ul class="virtues">
+        <li><span class="kanji" lang="ja">义</span><strong>Gi - Retidão</strong><span>Age com honestidade e justiça. Mantém tua palavra e compromissos.</span></li>
+        <li><span class="kanji" lang="ja">勇</span><strong>Yū - Coragem</strong><span>Enfrente os desafios com bravura. Supere o medo com determinação.</span></li>
+        <li><span class="kanji" lang="ja">仁</span><strong>Jin - Benevolência</strong><span>Pratique a compaixão e empatia. Ajude os outros sem esperar recompensa.</span></li>
+        <li><span class="kanji" lang="ja">礼</span><strong>Rei - Respeito</strong><span>Demonstre respeito por todos, independentemente de sua posição. Valorize as opiniões dos outros.</span></li>
+        <li><span class="kanji" lang="ja">诚</span><strong>Makoto - Sinceridade</strong><span>Seja verdadeiro e honesto consigo mesmo e com os outros. Evite a hipocrisia.</span></li>
+        <li><span class="kanji" lang="ja">名誉</span><strong>Meiyo - Honra</strong><span>Mantenha tua honra mesmo nas situações mais difíceis. Aceite a responsabilidade por tuas ações.</span></li>
+        <li><span class="kanji" lang="ja">忠义</span><strong>Chūgi - Lealdade</strong><span>Seja leal aos teus valores, à tua família e aos teus amigos. Coloque o dever acima do interesse pessoal.</span></li>
+      </ul>
+
+      <h3 class="section-title">Práticas diárias para cultivar a paz interior e empatia</h3>
+      <ul class="virtues">
+        <li><strong>Meditação</strong><span>Reserve tempo diariamente para meditar e acalmar a mente. Pratique a atenção plena para desenvolver a clareza mental.</span></li>
+        <li><strong>Exercícios físicos</strong><span>Mantenha o corpo forte e saudável através de exercícios regulares. A força física contribui para a força mental.</span></li>
+        <li><strong>Leitura</strong><span>Leia obras filosóficas e espirituais para expandir teu entendimento. Busque inspiração em escritos sobre a paz interior e empatia.</span></li>
+        <li><strong>Artes marciais (ou prática física)</strong><span>Envolva-se em práticas que desenvolvam disciplina e autocontrole. As artes marciais tradicionais são uma escolha valiosa.</span></li>
+        <li><strong>Reflexão diária</strong><span>Antes de dormir, reflita sobre tuas ações do dia. Identifique áreas para crescimento e melhoria.</span></li>
+        <li><strong>Atos de bondade</strong><span>Realize pequenos atos de bondade diariamente. Estenda a mão para ajudar os outros sem esperar algo em troca.</span></li>
+        <li><strong>Desconexão digital</strong><span>Reserve momentos do dia para desconectar-se de dispositivos eletrônicos. Permita-se estar presente no momento.</span></li>
+      </ul>
+    </section>
+
+    <blockquote class="quote">
+      "A ira é um sentimento momentâneo que gera consequências não momentâneas, uma ira controlada é como um rio fluindo livremente, sem rochas e com as águas claras, já a ira descontrolada deixa a água turva, descontrolada, com uma correnteza muito forte."
+    </blockquote>
+
+    <footer class="footer-links">
+      <a href="cheklist.html">Abrir o calendário / checklist →</a>
+    </footer>
+  </main>
+
+  <script src="index.js"></script>
+  <script src="https://climateclock.world/widget-v2.js" async></script>
+</body>
+</html>
