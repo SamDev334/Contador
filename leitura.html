@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Biblioteca com livros em PDF organizados por categoria, com leitor de páginas direto no navegador.">
+  <meta name="theme-color" content="#14100c">
+  <title>Leitura</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #14100c;
+      --glass: rgba(255, 255, 255, .06);
+      --glass-strong: rgba(255, 255, 255, .1);
+      --line: rgba(255, 255, 255, .13);
+      --text: #f6efe6;
+      --muted: #bcae9f;
+      --accent: #c9952e;
+      --accent-dark: #a67a1e;
+      --gold: #f4c95d;
+      --ok: #62d394;
+      --font-title: 'Cinzel', Georgia, serif;
+      --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { color-scheme: dark; }
+    body {
+      margin: 0; min-height: 100vh; color: var(--text); font-family: var(--font-body); line-height: 1.5;
+      background:
+        radial-gradient(900px 500px at 12% -10%, rgba(201, 149, 46, .22), transparent 60%),
+        radial-gradient(700px 420px at 100% 0%, rgba(244, 201, 93, .1), transparent 60%),
+        var(--bg);
+      background-attachment: fixed;
+    }
+    button { font: inherit; color: inherit; cursor: pointer; }
+    :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+    .page { width: min(1100px, 100% - 2rem); margin: 0 auto; padding: 2rem 0 3rem; display: grid; gap: 1.25rem; }
+
+    /* ---------- Cabeçalho ---------- */
+    .hero { text-align: center; margin-bottom: .5rem; }
+    .kicker { display: inline-block; font-size: .72rem; letter-spacing: .28em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+    h1 { margin: .35rem 0 1rem; font-family: var(--font-title); font-size: clamp(1.8rem, 5vw, 2.6rem); letter-spacing: .03em; }
+    .topnav { display: flex; gap: .5rem; justify-content: center; flex-wrap: wrap; }
+    .chip {
+      display: inline-flex; align-items: center; gap: .35rem; padding: .45rem .95rem; border-radius: 999px;
+      font-size: .85rem; font-weight: 600; text-decoration: none; color: var(--text);
+      background: var(--glass); border: 1px solid var(--line); transition: transform .2s, border-color .2s, background .2s;
+    }
+    .chip:hover { transform: translateY(-2px); border-color: rgba(255, 255, 255, .32); }
+
+    .card {
+      padding: 1.5rem; border-radius: 20px; background: var(--glass); border: 1px solid var(--line);
+      backdrop-filter: blur(10px); box-shadow: 0 18px 40px rgba(0, 0, 0, .28);
+    }
+
+    .btn {
+      padding: .75rem 1.2rem; border-radius: 12px; font-weight: 700; border: 1px solid var(--accent);
+      background: var(--accent); color: #fff; transition: transform .2s, box-shadow .2s, background .2s;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(201, 149, 46, .35); background: var(--accent-dark); }
+    .btn.ghost { background: var(--glass); border-color: var(--line); color: var(--text); font-weight: 600; box-shadow: none; }
+    .btn.ghost:hover { border-color: rgba(255, 255, 255, .32); background: var(--glass-strong); transform: translateY(-2px); box-shadow: none; }
+    .btn.small { padding: .55rem .95rem; font-size: .85rem; }
+
+    /* ---------- Barra de busca e filtros ---------- */
+    .search-row input[type="search"] {
+      width: 100%; padding: .8rem 1rem; font: inherit; color: var(--text);
+      background: rgba(255, 255, 255, .08); border: 1px solid var(--line); border-radius: 12px; color-scheme: dark;
+    }
+    .search-row input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 4px rgba(244, 201, 93, .2); }
+    .toolbar .hint { margin: .8rem 0 0; color: var(--muted); font-size: .85rem; text-align: center; }
+    .filters { display: flex; gap: .5rem; flex-wrap: wrap; justify-content: center; margin-top: 1rem; }
+    .chip.filter { border: 1px solid var(--line); background: var(--glass-strong); }
+    .chip.filter.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* ---------- Estante ---------- */
+    .shelf { display: grid; gap: 1.1rem; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+    .book {
+      display: flex; flex-direction: column; border-radius: 18px; overflow: hidden;
+      background: var(--glass); border: 1px solid var(--line); transition: transform .2s, border-color .2s;
+    }
+    .book:hover { transform: translateY(-3px); border-color: rgba(255, 255, 255, .3); }
+    .book-cover {
+      height: 130px; display: grid; place-items: center;
+      font-family: var(--font-title); font-size: 2.4rem; font-weight: 700; color: rgba(255, 255, 255, .92);
+      text-shadow: 0 4px 14px rgba(0, 0, 0, .4);
+    }
+    .book-info { padding: 1rem 1.1rem 1.2rem; display: flex; flex-direction: column; gap: .4rem; flex: 1; }
+    .book-tag {
+      align-self: flex-start; font-size: .68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+      color: var(--gold); border: 1px solid rgba(244, 201, 93, .4); padding: .2rem .6rem; border-radius: 999px;
+    }
+    .book-info h3 { margin: .2rem 0 0; font-family: var(--font-title); font-size: 1.1rem; line-height: 1.3; }
+    .book-author { margin: 0; color: var(--muted); font-size: .85rem; }
+    .book-progress { margin: 0; color: var(--gold); font-size: .78rem; font-weight: 600; }
+    .book-info .btn { margin-top: .6rem; align-self: flex-start; }
+
+    .empty { text-align: center; color: var(--muted); padding: 2.5rem 1rem; margin: 0; }
+    .empty b { display: block; font-size: 2rem; margin-bottom: .4rem; }
+    .empty code { background: rgba(255, 255, 255, .08); padding: .15rem .4rem; border-radius: 6px; font-size: .85em; }
+    .empty[hidden] { display: none; }
+
+    /* ---------- Leitor ---------- */
+    .reader-head { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+    .reader-title h2 { margin: 0; font-family: var(--font-title); font-size: 1.3rem; }
+    .reader-title p { margin: .1rem 0 0; color: var(--muted); font-size: .85rem; }
+
+    .reader-canvas-wrap {
+      display: flex; justify-content: center; align-items: flex-start; overflow: auto;
+      max-height: 72vh; padding: 1rem; border-radius: 14px; background: rgba(0, 0, 0, .25);
+    }
+    #pdfCanvas { max-width: 100%; border-radius: 6px; box-shadow: 0 10px 30px rgba(0, 0, 0, .5); background: #fff; }
+    #pdfCanvas[hidden] { display: none; }
+    .reader-status { color: var(--muted); text-align: center; padding: 2rem 1rem; margin: 0; }
+    .reader-status[hidden] { display: none; }
+
+    .reader-controls { display: flex; align-items: center; justify-content: center; gap: .6rem; flex-wrap: wrap; margin-top: 1.1rem; }
+    .icon-btn {
+      width: 2.5rem; height: 2.5rem; display: grid; place-items: center; border-radius: 12px; font-size: 1.1rem;
+      background: var(--glass); border: 1px solid var(--line); transition: background .2s, border-color .2s;
+    }
+    .icon-btn:hover { background: var(--glass-strong); border-color: rgba(255, 255, 255, .32); }
+    .page-indicator { display: flex; align-items: center; gap: .4rem; font-weight: 600; color: var(--muted); }
+    #pageInput {
+      width: 3.6rem; padding: .5rem .5rem; text-align: center; font: inherit; color: var(--text);
+      background: rgba(255, 255, 255, .08); border: 1px solid var(--line); border-radius: 10px; color-scheme: dark;
+    }
+    #pageInput:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 4px rgba(244, 201, 93, .2); }
+    .sep { width: 1px; height: 1.6rem; background: var(--line); }
+    #zoomLevel { font-size: .85rem; color: var(--muted); min-width: 3.4rem; text-align: center; }
+
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    @media (max-width: 420px) { .card { padding: 1.1rem; } }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+
+    <header class="hero">
+      <span class="kicker">Biblioteca</span>
+      <h1>Leitura</h1>
+      <nav class="topnav" aria-label="Outras páginas">
+        <a class="chip" href="index.html">← Início</a>
+        <a class="chip" href="Ferramentas.html">🧮 Ferramentas úteis</a>
+        <a class="chip" href="cheklist.html">✅ Checklist</a>
+        <a class="chip" href="calendario.html">📅 Calendário</a>
+        <a class="chip" href="água.html">💧 Tela de água</a>
+      </nav>
+    </header>
+
+    <!-- Estante de livros -->
+    <section id="viewBiblioteca">
+      <section class="card toolbar" aria-label="Buscar e filtrar">
+        <div class="search-row">
+          <label class="sr-only" for="searchInput">Buscar por título ou autor</label>
+          <input type="search" id="searchInput" placeholder="Buscar por título ou autor...">
+        </div>
+        <div class="filters" id="categoryFilters" aria-label="Categorias"></div>
+        <p class="hint">Os livros ficam guardados na pasta <code>/livros</code> do repositório. O progresso de leitura é salvo neste navegador.</p>
+      </section>
+
+      <section class="shelf" id="shelf" aria-label="Livros"></section>
+
+      <p class="empty" id="emptyVazia" hidden>
+        <b>📚</b>Nenhum livro cadastrado ainda.<br>
+        Coloque um PDF na pasta <code>/livros</code> e registre-o em <code>livros/livros.js</code>.
+      </p>
+      <p class="empty" id="emptySemResultado" hidden>
+        <b>🔍</b>Nenhum livro encontrado para esse filtro ou busca.
+      </p>
+    </section>
+
+    <!-- Leitor de PDF -->
+    <section id="viewLeitor" hidden>
+      <div class="reader-head">
+        <button class="btn ghost small" id="backToShelf" type="button">← Biblioteca</button>
+        <div class="reader-title">
+          <h2 id="readerTitle"></h2>
+          <p id="readerAuthor"></p>
+        </div>
+      </div>
+
+      <div class="reader-card card">
+        <div class="reader-canvas-wrap" id="canvasWrap">
+          <canvas id="pdfCanvas" hidden></canvas>
+          <p class="reader-status" id="readerStatus">Carregando livro...</p>
+        </div>
+        <div class="reader-controls">
+          <button class="icon-btn" id="prevPage" type="button" aria-label="Página anterior">‹</button>
+          <div class="page-indicator">
+            <label class="sr-only" for="pageInput">Número da página</label>
+            <input type="number" id="pageInput" min="1" value="1"> / <span id="pageCount">—</span>
+          </div>
+          <button class="icon-btn" id="nextPage" type="button" aria-label="Próxima página">›</button>
+          <span class="sep"></span>
+          <button class="icon-btn" id="zoomOut" type="button" aria-label="Diminuir zoom">−</button>
+          <span id="zoomLevel">100%</span>
+          <button class="icon-btn" id="zoomIn" type="button" aria-label="Aumentar zoom">+</button>
+          <span class="sep"></span>
+          <button class="icon-btn" id="fullscreenBtn" type="button" aria-label="Tela cheia">⤢</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="livros/livros.js"></script>
+  <script>
+    'use strict';
+
+    const $ = (s) => document.querySelector(s);
+    const PROGRESS_KEY = 'leituraProgresso:v1';
+
+    const livros = Array.isArray(window.LIVROS) ? window.LIVROS : [];
+
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+
+    function carregarProgresso() {
+      try { return JSON.parse(localStorage.getItem(PROGRESS_KEY)) || {}; } catch { return {}; }
+    }
+    function salvarProgresso() {
+      try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(progresso)); } catch { /* armazenamento indisponível: segue sem salvar */ }
+    }
+
+    const progresso = carregarProgresso();
+
+    /* ---------- Estante ---------- */
+    let categoriaAtiva = 'Todos';
+    let termoBusca = '';
+
+    function categorias() {
+      const set = new Set(livros.map((l) => l.categoria).filter(Boolean));
+      return ['Todos', ...set];
+    }
+
+    function renderFiltros() {
+      const cont = $('#categoryFilters');
+      cont.innerHTML = '';
+      categorias().forEach((cat) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'chip filter' + (cat === categoriaAtiva ? ' active' : '');
+        btn.textContent = cat;
+        btn.addEventListener('click', () => {
+          categoriaAtiva = cat;
+          renderFiltros();
+          renderEstante();
+        });
+        cont.appendChild(btn);
+      });
+    }
+
+    function criarCard(livro) {
+      const art = document.createElement('article');
+      art.className = 'book';
+      const cor = livro.cor || '#c9952e';
+
+      const capa = document.createElement('div');
+      capa.className = 'book-cover';
+      capa.style.background = `linear-gradient(160deg, ${cor}, rgba(0,0,0,.35))`;
+      capa.textContent = (livro.titulo || '?').charAt(0).toUpperCase();
+      art.appendChild(capa);
+
+      const info = document.createElement('div');
+      info.className = 'book-info';
+
+      const tag = document.createElement('span');
+      tag.className = 'book-tag';
+      tag.textContent = livro.categoria || 'Geral';
+      info.appendChild(tag);
+
+      const titulo = document.createElement('h3');
+      titulo.textContent = livro.titulo || 'Sem título';
+      info.appendChild(titulo);
+
+      const autor = document.createElement('p');
+      autor.className = 'book-author';
+      autor.textContent = livro.autor || 'Autor desconhecido';
+      info.appendChild(autor);
+
+      const pagina = progresso[livro.id];
+      if (pagina) {
+        const prog = document.createElement('p');
+        prog.className = 'book-progress';
+        prog.textContent = `Continuar da página ${pagina}`;
+        info.appendChild(prog);
+      }
+
+      const btn = document.createElement('button');
+      btn.className = 'btn small';
+      btn.type = 'button';
+      btn.textContent = pagina ? 'Continuar' : 'Ler';
+      btn.addEventListener('click', () => { location.hash = `#ler/${encodeURIComponent(livro.id)}`; });
+      info.appendChild(btn);
+
+      art.appendChild(info);
+      return art;
+    }
+
+    function renderEstante() {
+      const termo = termoBusca.trim().toLowerCase();
+      const filtrados = livros.filter((l) => {
+        const okCategoria = categoriaAtiva === 'Todos' || l.categoria === categoriaAtiva;
+        const okBusca = !termo || `${l.titulo} ${l.autor}`.toLowerCase().includes(termo);
+        return okCategoria && okBusca;
+      });
+
+      const shelf = $('#shelf');
+      shelf.innerHTML = '';
+      filtrados.forEach((livro) => shelf.appendChild(criarCard(livro)));
+
+      $('#emptyVazia').hidden = livros.length > 0;
+      $('#emptySemResultado').hidden = livros.length === 0 || filtrados.length > 0;
+    }
+
+    $('#searchInput').addEventListener('input', (e) => { termoBusca = e.target.value; renderEstante(); });
+
+    /* ---------- Leitor ---------- */
+    let pdfAtual = null;
+    let livroAtualId = null;
+    let paginaAtual = 1;
+    let totalPaginas = 0;
+    let escala = 1;
+    let renderizando = false;
+    let paginaPendente = null;
+
+    async function iniciarLeitura(livro) {
+      pdfAtual = null;
+      livroAtualId = livro.id;
+      escala = 1;
+      $('#readerTitle').textContent = livro.titulo || 'Sem título';
+      $('#readerAuthor').textContent = livro.autor || '';
+      $('#zoomLevel').textContent = '100%';
+      $('#pdfCanvas').hidden = true;
+      $('#readerStatus').hidden = false;
+      $('#readerStatus').textContent = 'Carregando livro...';
+      $('#pageCount').textContent = '—';
+
+      if (!window.pdfjsLib) {
+        $('#readerStatus').textContent = 'O leitor de PDF não carregou. Verifique sua conexão com a internet e recarregue a página.';
+        return;
+      }
+
+      const caminho = `livros/${livro.arquivo}`;
+      try {
+        const pdf = await pdfjsLib.getDocument(caminho).promise;
+        if (livroAtualId !== livro.id) return; // usuário já saiu deste livro
+        pdfAtual = pdf;
+        totalPaginas = pdf.numPages;
+        $('#pageCount').textContent = totalPaginas;
+        $('#pageInput').max = totalPaginas;
+
+        const salva = progresso[livro.id];
+        paginaAtual = salva && salva >= 1 && salva <= totalPaginas ? salva : 1;
+
+        $('#pdfCanvas').hidden = false;
+        $('#readerStatus').hidden = true;
+        await renderizarPagina(paginaAtual);
+      } catch (erro) {
+        $('#readerStatus').textContent = `Não foi possível abrir "${livro.arquivo}". Verifique se o arquivo está em /livros e se o nome em livros.js está correto.`;
+      }
+    }
+
+    async function renderizarPagina(numero) {
+      if (!pdfAtual) return;
+      if (renderizando) { paginaPendente = numero; return; }
+      renderizando = true;
+
+      try {
+        const page = await pdfAtual.getPage(numero);
+        const viewport = page.getViewport({ scale: escala });
+        const canvas = $('#pdfCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        await page.render({ canvasContext: ctx, viewport }).promise;
+
+        paginaAtual = numero;
+        $('#pageInput').value = numero;
+        if (livroAtualId) {
+          progresso[livroAtualId] = numero;
+          salvarProgresso();
+        }
+      } finally {
+        renderizando = false;
+        if (paginaPendente !== null) {
+          const proxima = paginaPendente;
+          paginaPendente = null;
+          renderizarPagina(proxima);
+        }
+      }
+    }
+
+    function irParaPagina(numero) {
+      if (!pdfAtual) return;
+      const alvo = Math.min(Math.max(1, numero), totalPaginas);
+      renderizarPagina(alvo);
+    }
+
+    $('#prevPage').addEventListener('click', () => irParaPagina(paginaAtual - 1));
+    $('#nextPage').addEventListener('click', () => irParaPagina(paginaAtual + 1));
+    $('#pageInput').addEventListener('change', (e) => irParaPagina(Number(e.target.value)));
+    $('#zoomIn').addEventListener('click', () => { escala = Math.min(2.6, escala + .2); atualizarZoom(); });
+    $('#zoomOut').addEventListener('click', () => { escala = Math.max(.4, escala - .2); atualizarZoom(); });
+
+    function atualizarZoom() {
+      $('#zoomLevel').textContent = `${Math.round(escala * 100)}%`;
+      renderizarPagina(paginaAtual);
+    }
+
+    $('#fullscreenBtn').addEventListener('click', () => {
+      const el = $('#canvasWrap');
+      if (!document.fullscreenElement) el.requestFullscreen?.();
+      else document.exitFullscreen?.();
+    });
+
+    $('#backToShelf').addEventListener('click', () => { location.hash = ''; });
+
+    document.addEventListener('keydown', (e) => {
+      if ($('#viewLeitor').hidden) return;
+      if (e.key === 'ArrowRight') irParaPagina(paginaAtual + 1);
+      else if (e.key === 'ArrowLeft') irParaPagina(paginaAtual - 1);
+      else if (e.key === 'Escape') { location.hash = ''; }
+    });
+
+    /* ---------- Roteamento por hash ---------- */
+    function rotearHash() {
+      const hash = location.hash.replace(/^#/, '');
+      if (hash.startsWith('ler/')) {
+        const id = decodeURIComponent(hash.slice(4));
+        const livro = livros.find((l) => l.id === id);
+        if (livro) {
+          $('#viewBiblioteca').hidden = true;
+          $('#viewLeitor').hidden = false;
+          iniciarLeitura(livro);
+          return;
+        }
+      }
+      $('#viewBiblioteca').hidden = false;
+      $('#viewLeitor').hidden = true;
+      pdfAtual = null;
+      livroAtualId = null;
+      renderEstante();
+    }
+
+    window.addEventListener('hashchange', rotearHash);
+
+    /* ---------- Início ---------- */
+    renderFiltros();
+    renderEstante();
+    rotearHash();
+  </script>
+</body>
+</html>
