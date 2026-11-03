@@ -13,14 +13,14 @@
 //
 // Dica: respeite maiúsculas/minúsculas no nome do arquivo. No GitHub Pages isso faz diferença.
 
-const LIVROS = [
 
-  // {
-  //   id: "ebook.pdf",
-  //   titulo: "Italiano Ebook Completo",
-  //   autor: "Italiano Na Prática",
-  //   categoria: "Idiomas",
-  //   arquivo: "ebook.pdf",
-  //   cor: "#c9952e",
-  // },
+  const LIVROS = [
+  {
+    id: "ebook.pdf",
+    titulo: "Italiano Ebook Completo",
+    autor: "Italiano Na Prática",
+    categoria: "Idiomas",
+    arquivo: "ebook.pdf",
+    cor: "#c9952e",
+  },
 ];
