@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Calendário anual com lembretes por dia. Navegue pelos próximos 10 anos e salve anotações que ficam guardadas no seu navegador.">
+  <meta name="theme-color" content="#120e10">
+  <title>Calendário</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #120e10;
+      --glass: rgba(255, 255, 255, .06);
+      --glass-strong: rgba(255, 255, 255, .1);
+      --line: rgba(255, 255, 255, .13);
+      --text: #f6efef;
+      --muted: #b9aaad;
+      --accent: #e63946;
+      --gold: #f4c95d;
+      --ok: #62d394;
+      --font-title: 'Cinzel', Georgia, serif;
+      --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { color-scheme: dark; }
+    body {
+      margin: 0; min-height: 100vh; color: var(--text); font-family: var(--font-body); line-height: 1.5;
+      background:
+        radial-gradient(900px 500px at 12% -10%, rgba(230, 57, 70, .22), transparent 60%),
+        radial-gradient(700px 420px at 100% 0%, rgba(244, 201, 93, .12), transparent 60%),
+        var(--bg);
+      background-attachment: fixed;
+    }
+    button { font: inherit; color: inherit; cursor: pointer; }
+    :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+    .page { width: min(1200px, 100% - 2rem); margin: 0 auto; padding: 2rem 0 3rem; }
+
+    /* ---------- Cabeçalho ---------- */
+    .hero { text-align: center; margin-bottom: 1.75rem; }
+    .kicker { display: inline-block; font-size: .72rem; letter-spacing: .28em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+    h1 { margin: .35rem 0 1rem; font-family: var(--font-title); font-size: clamp(1.9rem, 5vw, 2.8rem); letter-spacing: .03em; }
+    .topnav { display: flex; gap: .5rem; justify-content: center; flex-wrap: wrap; }
+    .chip {
+      display: inline-flex; align-items: center; gap: .35rem; padding: .45rem .95rem; border-radius: 999px;
+      font-size: .85rem; font-weight: 600; text-decoration: none; color: var(--text);
+      background: var(--glass); border: 1px solid var(--line); transition: transform .2s, border-color .2s;
+    }
+    .chip:hover { transform: translateY(-2px); border-color: rgba(255, 255, 255, .32); }
+
+    .card {
+      padding: 1.25rem; border-radius: 20px; background: var(--glass); border: 1px solid var(--line);
+      backdrop-filter: blur(10px); box-shadow: 0 18px 40px rgba(0, 0, 0, .28);
+    }
+
+    .banner {
+      margin: 0 0 1rem; padding: .75rem 1rem; border-radius: 12px; font-size: .88rem; font-weight: 600;
+      background: rgba(230, 57, 70, .15); border: 1px solid rgba(230, 57, 70, .55); color: #ffb3b9;
+    }
+    .banner[hidden] { display: none; }
+
+    /* ---------- Barra de ano ---------- */
+    .toolbar { margin-bottom: 1.5rem; }
+    .toolbar-row { display: flex; align-items: center; justify-content: center; gap: .6rem; flex-wrap: wrap; }
+    .icon-btn {
+      width: 2.5rem; height: 2.5rem; display: grid; place-items: center; border-radius: 12px; font-size: 1.1rem;
+      background: var(--glass); border: 1px solid var(--line); transition: background .2s, border-color .2s;
+    }
+    .icon-btn:hover { background: var(--glass-strong); border-color: rgba(255, 255, 255, .32); }
+    select#yearSelect {
+      height: 2.5rem; padding: 0 .9rem; border-radius: 12px; font: inherit; font-weight: 700;
+      background: var(--glass); border: 1px solid var(--line); color: var(--text);
+    }
+    .today-btn {
+      height: 2.5rem; padding: 0 .9rem; border-radius: 12px; font-size: .85rem; font-weight: 600;
+      background: rgba(244, 201, 93, .12); border: 1px solid rgba(244, 201, 93, .5); color: var(--gold);
+    }
+    .today-btn:hover { background: rgba(244, 201, 93, .22); }
+    .toolbar .hint { margin: .9rem 0 0; text-align: center; color: var(--muted); font-size: .88rem; }
+    .toolbar .hint strong { color: var(--gold); }
+
+    /* ---------- Grade do ano ---------- */
+    .year-grid {
+      display: grid; gap: 1.1rem;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+    }
+    .month-card { padding: 1rem; }
+    .month-title {
+      margin: 0 0 .7rem; text-align: center; font-family: var(--font-title); font-size: 1.05rem; letter-spacing: .02em;
+    }
+    .month-title::first-letter { text-transform: uppercase; }
+    .weekdays, .days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .25rem; }
+    .weekdays { margin-bottom: .3rem; }
+    .weekdays span { text-align: center; font-size: .62rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+
+    .day {
+      position: relative; aspect-ratio: 1 / 1; min-height: 28px; padding: 0;
+      display: grid; place-items: center; border-radius: 8px;
+      background: rgba(255, 255, 255, .04); border: 1px solid transparent;
+      font-size: .78rem; font-weight: 600; font-variant-numeric: tabular-nums;
+      transition: background .15s, border-color .15s, transform .15s;
+    }
+    .day:hover { background: var(--glass-strong); transform: translateY(-1px); }
+    .day.empty { visibility: hidden; cursor: default; }
+    .day.past { color: var(--muted); }
+    .day.today { border-color: var(--gold); color: var(--gold); background: rgba(244, 201, 93, .1); }
+    .day.has-reminder { background: rgba(230, 57, 70, .18); border-color: rgba(230, 57, 70, .55); }
+    .day.has-reminder.today { background: rgba(244, 201, 93, .18); border-color: var(--gold); }
+    .day .dot {
+      position: absolute; left: 50%; bottom: 3px; width: 5px; height: 5px; border-radius: 50%;
+      background: var(--accent); transform: translateX(-50%);
+    }
+    .day.today .dot { background: var(--gold); }
+
+    /* ---------- Modal de lembrete ---------- */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0, 0, 0, .6); display: grid; place-items: center;
+      padding: 1rem; z-index: 50;
+    }
+    .modal-backdrop[hidden] { display: none; }
+    .modal {
+      width: min(420px, 100%); padding: 1.5rem; border-radius: 18px;
+      background: #1a1416; border: 1px solid var(--line); box-shadow: 0 24px 60px rgba(0, 0, 0, .55);
+    }
+    .modal h2 { margin: 0 0 .2rem; font-family: var(--font-title); font-size: 1.3rem; }
+    .modal-date { margin: 0 0 1rem; color: var(--muted); font-size: .88rem; }
+    .modal-date::first-letter { text-transform: uppercase; }
+    textarea#reminderText {
+      width: 100%; min-height: 110px; resize: vertical; padding: .8rem 1rem; font: inherit; color: var(--text);
+      background: rgba(255, 255, 255, .08); border: 1px solid var(--line); border-radius: 12px;
+    }
+    textarea#reminderText::placeholder { color: rgba(185, 170, 173, .8); }
+    textarea#reminderText:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 4px rgba(244, 201, 93, .2); }
+    .modal-actions { display: flex; align-items: center; justify-content: space-between; gap: .6rem; margin-top: 1.1rem; flex-wrap: wrap; }
+    .modal-actions-right { display: flex; gap: .6rem; }
+
+    .btn {
+      padding: .75rem 1.2rem; border-radius: 12px; font-weight: 700; border: 1px solid var(--accent);
+      background: var(--accent); color: #fff; transition: transform .2s, box-shadow .2s, background .2s;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(230, 57, 70, .35); }
+    .btn.ghost { background: var(--glass); border-color: var(--line); color: var(--text); font-weight: 600; }
+    .btn.ghost:hover { box-shadow: none; border-color: rgba(255, 255, 255, .32); background: var(--glass-strong); }
+    .btn.small { padding: .5rem .9rem; font-size: .85rem; }
+
+    .toast {
+      position: fixed; left: 50%; bottom: 1.25rem; transform: translate(-50%, 20px); opacity: 0; pointer-events: none;
+      padding: .7rem 1.1rem; border-radius: 12px; font-size: .9rem; font-weight: 600;
+      background: #241a1d; border: 1px solid var(--line); box-shadow: 0 12px 30px rgba(0, 0, 0, .5);
+      transition: opacity .25s, transform .25s; max-width: calc(100% - 2rem); text-align: center; z-index: 60;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    @media (max-width: 420px) { .card { padding: .9rem; } }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+
+    <header class="hero">
+      <span class="kicker">Calendário</span>
+      <h1>Calendário com lembretes</h1>
+      <nav class="topnav" aria-label="Outras páginas">
+        <a class="chip" href="index.html">← Início</a>
+        <a class="chip" href="Ferramentas.html">🧮 Ferramentas úteis</a>
+        <a class="chip" href="cheklist.html">✅ Checklist</a>
+        <a class="chip" href="água.html">💧 Tela de água</a>
+      </nav>
+    </header>
+
+    <p class="banner" id="storageBanner" role="alert" hidden>
+      ⚠️ Seu navegador está bloqueando o armazenamento local (modo privado ou cookies desativados). Os lembretes
+      funcionam, mas somem ao fechar a página.
+    </p>
+
+    <section class="card toolbar" aria-label="Navegação de ano">
+      <div class="toolbar-row">
+        <button class="icon-btn" id="prevYear" type="button" aria-label="Ano anterior">‹</button>
+        <label class="sr-only" for="yearSelect">Selecionar ano</label>
+        <select id="yearSelect"></select>
+        <button class="icon-btn" id="nextYear" type="button" aria-label="Próximo ano">›</button>
+        <button class="today-btn" id="goToday" type="button">Hoje</button>
+      </div>
+      <p class="hint" id="toolbarHint">Clique em qualquer dia para adicionar, editar ou remover um lembrete.</p>
+    </section>
+
+    <section class="year-grid" id="yearGrid" aria-label="Meses do ano"></section>
+  </main>
+
+  <div class="modal-backdrop" id="modalBackdrop" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h2 id="modalTitle">Lembrete</h2>
+      <p class="modal-date" id="modalDate"></p>
+      <label class="sr-only" for="reminderText">Texto do lembrete</label>
+      <textarea id="reminderText" maxlength="300" placeholder="Escreva um lembrete para este dia..."></textarea>
+      <div class="modal-actions">
+        <button class="btn ghost small" id="deleteReminder" type="button">Remover</button>
+        <div class="modal-actions-right">
+          <button class="btn ghost small" id="cancelModal" type="button">Cancelar</button>
+          <button class="btn small" id="saveReminder" type="button">Salvar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    'use strict';
+
+    const STORAGE_KEY = 'calendarioLembretes:v1';
+    const MAX_TEXT = 300;
+    const $ = (s) => document.querySelector(s);
+    const pad = (n) => String(n).padStart(2, '0');
+
+    const MESES = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+    ];
+    const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+    const toKey = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+    const hoje = new Date();
+    const hojeKey = toKey(hoje);
+    const anoReal = hoje.getFullYear();
+
+    /* ---------- Armazenamento seguro ---------- */
+    let storageOk = true;
+    let lembretes = {};
+
+    function sanitize(raw) {
+      const out = {};
+      if (raw && typeof raw === 'object') {
+        for (const [key, value] of Object.entries(raw)) {
+          if (/^\d{4}-\d{2}-\d{2}$/.test(key) && typeof value === 'string' && value.trim()) {
+            out[key] = value.trim().slice(0, MAX_TEXT);
+          }
+        }
+      }
+      return out;
+    }
+
+    function load() {
+      try {
+        const text = localStorage.getItem(STORAGE_KEY);
+        lembretes = sanitize(text ? JSON.parse(text) : null);
+      } catch {
+        lembretes = {};
+      }
+    }
+
+    function persist() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(lembretes));
+        storageOk = true;
+      } catch {
+        storageOk = false;
+      }
+      $('#storageBanner').hidden = storageOk;
+    }
+
+    /* ---------- Toast ---------- */
+    let toastTimer = null;
+    function showToast(msg) {
+      const toast = $('#toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    /* ---------- Seletor de ano ---------- */
+    let anoAtual = anoReal;
+
+    function garantirOpcaoAno(ano) {
+      if (!$(`#yearSelect option[value="${ano}"]`)) {
+        const opt = document.createElement('option');
+        opt.value = String(ano);
+        opt.textContent = String(ano);
+        $('#yearSelect').appendChild(opt);
+        ordenarOpcoesAno();
+      }
+    }
+
+    function ordenarOpcoesAno() {
+      const select = $('#yearSelect');
+      const opcoes = [...select.options].sort((a, b) => Number(a.value) - Number(b.value));
+      opcoes.forEach((opt) => select.appendChild(opt));
+    }
+
+    function popularSeletorAno() {
+      const select = $('#yearSelect');
+      select.innerHTML = '';
+      for (let ano = anoReal; ano <= anoReal + 9; ano++) {
+        const opt = document.createElement('option');
+        opt.value = String(ano);
+        opt.textContent = `${ano}${ano === anoReal ? ' (atual)' : ''}`;
+        select.appendChild(opt);
+      }
+    }
+
+    function irParaAno(ano) {
+      anoAtual = ano;
+      garantirOpcaoAno(ano);
+      $('#yearSelect').value = String(ano);
+      renderizarAno(ano);
+    }
+
+    /* ---------- Grade do ano ---------- */
+    function contarLembretesDoAno(ano) {
+      const prefixo = `${ano}-`;
+      return Object.keys(lembretes).filter((k) => k.startsWith(prefixo)).length;
+    }
+
+    function renderizarAno(ano) {
+      const grid = $('#yearGrid');
+      grid.innerHTML = '';
+
+      for (let mes = 0; mes < 12; mes++) {
+        const card = document.createElement('section');
+        card.className = 'card month-card';
+        card.setAttribute('aria-label', `${MESES[mes]} de ${ano}`);
+
+        const titulo = document.createElement('h3');
+        titulo.className = 'month-title';
+        titulo.textContent = `${MESES[mes]} de ${ano}`;
+        card.appendChild(titulo);
+
+        const semana = document.createElement('div');
+        semana.className = 'weekdays';
+        semana.setAttribute('aria-hidden', 'true');
+        DIAS_SEMANA.forEach((d) => {
+          const span = document.createElement('span');
+          span.textContent = d;
+          semana.appendChild(span);
+        });
+        card.appendChild(semana);
+
+        const dias = document.createElement('div');
+        dias.className = 'days';
+
+        const primeiroDiaSemana = new Date(ano, mes, 1).getDay();
+        const diasNoMes = new Date(ano, mes + 1, 0).getDate();
+
+        for (let i = 0; i < primeiroDiaSemana; i++) {
+          const vazio = document.createElement('span');
+          vazio.className = 'day empty';
+          vazio.setAttribute('aria-hidden', 'true');
+          dias.appendChild(vazio);
+        }
+
+        for (let dia = 1; dia <= diasNoMes; dia++) {
+          const data = new Date(ano, mes, dia);
+          const key = toKey(data);
+
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'day';
+          btn.dataset.key = key;
+          btn.textContent = String(dia);
+
+          if (key === hojeKey) btn.classList.add('today');
+          else if (data < new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate())) btn.classList.add('past');
+
+          if (lembretes[key]) {
+            btn.classList.add('has-reminder');
+            btn.title = lembretes[key];
+            const dot = document.createElement('span');
+            dot.className = 'dot';
+            btn.appendChild(dot);
+          }
+
+          const dataFmt = data.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+          btn.setAttribute('aria-label', lembretes[key] ? `${dataFmt}. Lembrete: ${lembretes[key]}` : dataFmt);
+
+          dias.appendChild(btn);
+        }
+
+        card.appendChild(dias);
+        grid.appendChild(card);
+      }
+
+      const total = contarLembretesDoAno(ano);
+      $('#toolbarHint').innerHTML = total > 0
+        ? `Clique em qualquer dia para adicionar, editar ou remover um lembrete. <strong>${total}</strong> lembrete${total > 1 ? 's' : ''} salvo${total > 1 ? 's' : ''} em ${ano}.`
+        : 'Clique em qualquer dia para adicionar, editar ou remover um lembrete.';
+    }
+
+    /* ---------- Modal ---------- */
+    let chaveAtual = null;
+    let ultimoFoco = null;
+
+    function abrirModal(key, elementoOrigem) {
+      chaveAtual = key;
+      ultimoFoco = elementoOrigem;
+
+      const [y, m, d] = key.split('-').map(Number);
+      const data = new Date(y, m - 1, d);
+      $('#modalDate').textContent = data.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      $('#reminderText').value = lembretes[key] || '';
+
+      $('#modalBackdrop').hidden = false;
+      $('#reminderText').focus();
+    }
+
+    function fecharModal() {
+      $('#modalBackdrop').hidden = true;
+      chaveAtual = null;
+      if (ultimoFoco) ultimoFoco.focus();
+    }
+
+    function salvarLembrete() {
+      if (!chaveAtual) return;
+      const texto = $('#reminderText').value.trim().slice(0, MAX_TEXT);
+      if (texto) {
+        lembretes[chaveAtual] = texto;
+        showToast('Lembrete salvo.');
+      } else {
+        delete lembretes[chaveAtual];
+        showToast('Lembrete removido.');
+      }
+      persist();
+      fecharModal();
+      renderizarAno(anoAtual);
+    }
+
+    function removerLembrete() {
+      if (!chaveAtual) return;
+      const havia = Boolean(lembretes[chaveAtual]);
+      delete lembretes[chaveAtual];
+      persist();
+      fecharModal();
+      renderizarAno(anoAtual);
+      if (havia) showToast('Lembrete removido.');
+    }
+
+    /* ---------- Eventos ---------- */
+    $('#yearGrid').addEventListener('click', (e) => {
+      const btn = e.target.closest('.day');
+      if (!btn || btn.classList.contains('empty')) return;
+      abrirModal(btn.dataset.key, btn);
+    });
+
+    $('#prevYear').addEventListener('click', () => irParaAno(anoAtual - 1));
+    $('#nextYear').addEventListener('click', () => irParaAno(anoAtual + 1));
+    $('#yearSelect').addEventListener('change', (e) => irParaAno(Number(e.target.value)));
+    $('#goToday').addEventListener('click', () => {
+      irParaAno(anoReal);
+      const atual = $('.day.today');
+      if (atual) atual.closest('.month-card').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    $('#saveReminder').addEventListener('click', salvarLembrete);
+    $('#deleteReminder').addEventListener('click', removerLembrete);
+    $('#cancelModal').addEventListener('click', fecharModal);
+    $('#modalBackdrop').addEventListener('click', (e) => { if (e.target.id === 'modalBackdrop') fecharModal(); });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !$('#modalBackdrop').hidden) fecharModal();
+    });
+
+    /* ---------- Início ---------- */
+    load();
+    popularSeletorAno();
+    $('#yearSelect').value = String(anoAtual);
+    renderizarAno(anoAtual);
+    persist();
+  </script>
+</body>
+</html>
