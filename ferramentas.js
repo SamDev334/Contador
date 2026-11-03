@@ -44,7 +44,8 @@ function initTabs() {
     });
     panels.forEach((p) => { p.hidden = p.id !== target.dataset.tab; });
     store.set('ferramentaAtiva', target.dataset.tab);
-    history.replaceState(null, '', `#${target.dataset.tab}`);
+    // replaceState pode lançar SecurityError em prévias/iframes isolados: não pode derrubar o resto
+    try { history.replaceState(null, '', `#${target.dataset.tab}`); } catch { /* ignora */ }
     target.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
     if (focus) target.focus();
   };
@@ -527,16 +528,18 @@ function initTasks() {
   render();
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  initTabs();
-  initDays();
-  initClock();
-  initCalculator();
-  initNotes();
-  initStopwatch();
-  initTimer();
-  initTemperature();
-  initUnits();
-  initPassword();
-  initTasks();
-});
+/* ---------- Inicialização ---------- */
+// Cada ferramenta é iniciada isolada: se uma falhar, as outras continuam funcionando
+// e o erro aparece no Console (F12) com o nome da ferramenta.
+function boot() {
+  const inits = [
+    initTabs, initDays, initClock, initCalculator, initNotes,
+    initStopwatch, initTimer, initTemperature, initUnits, initPassword, initTasks,
+  ];
+  inits.forEach((init) => {
+    try { init(); } catch (err) { console.error(`[ferramentas] falha em ${init.name}:`, err); }
+  });
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+else boot();
