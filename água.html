@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Controle de hidratação diária: registre quanto você bebeu de água, acompanhe sua meta e veja há quanto tempo foi o último gole. Tudo salvo no seu navegador.">
+  <meta name="theme-color" content="#120e10">
+  <title>Tela de água</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0e1416;
+      --glass: rgba(255, 255, 255, .06);
+      --glass-strong: rgba(255, 255, 255, .1);
+      --line: rgba(255, 255, 255, .13);
+      --text: #eef6f7;
+      --muted: #a9bcc0;
+      --accent: #2ea7c9;
+      --accent-dark: #1f84a1;
+      --gold: #f4c95d;
+      --ok: #62d394;
+      --font-title: 'Cinzel', Georgia, serif;
+      --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { color-scheme: dark; }
+    body {
+      margin: 0; min-height: 100vh; color: var(--text); font-family: var(--font-body); line-height: 1.5;
+      background:
+        radial-gradient(900px 500px at 12% -10%, rgba(46, 167, 201, .25), transparent 60%),
+        radial-gradient(700px 420px at 100% 0%, rgba(244, 201, 93, .1), transparent 60%),
+        var(--bg);
+      background-attachment: fixed;
+    }
+    button { font: inherit; color: inherit; cursor: pointer; }
+    :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+    .page { width: min(880px, 100% - 2rem); margin: 0 auto; padding: 2rem 0 3rem; display: grid; gap: 1.25rem; }
+
+    /* ---------- Cabeçalho ---------- */
+    .hero { text-align: center; margin-bottom: .5rem; }
+    .kicker { display: inline-block; font-size: .72rem; letter-spacing: .28em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+    h1 { margin: .35rem 0 1rem; font-family: var(--font-title); font-size: clamp(1.8rem, 5vw, 2.6rem); letter-spacing: .03em; }
+    .topnav { display: flex; gap: .5rem; justify-content: center; flex-wrap: wrap; }
+    .chip {
+      display: inline-flex; align-items: center; gap: .35rem; padding: .45rem .95rem; border-radius: 999px;
+      font-size: .85rem; font-weight: 600; text-decoration: none; color: var(--text);
+      background: var(--glass); border: 1px solid var(--line); transition: transform .2s, border-color .2s;
+    }
+    .chip:hover { transform: translateY(-2px); border-color: rgba(255, 255, 255, .32); }
+
+    .card {
+      padding: 1.5rem; border-radius: 20px; background: var(--glass); border: 1px solid var(--line);
+      backdrop-filter: blur(10px); box-shadow: 0 18px 40px rgba(0, 0, 0, .28);
+    }
+    .card h2 { margin: 0 0 .25rem; font-family: var(--font-title); font-size: 1.25rem; }
+    .card .hint { margin: 0 0 1rem; color: var(--muted); font-size: .88rem; }
+
+    .banner {
+      margin: 0; padding: .75rem 1rem; border-radius: 12px; font-size: .88rem; font-weight: 600;
+      background: rgba(230, 57, 70, .15); border: 1px solid rgba(230, 57, 70, .55); color: #ffb3b9;
+    }
+    .banner[hidden] { display: none; }
+
+    /* ---------- Seletor de dia ---------- */
+    .day-row { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; justify-content: center; }
+    input[type="date"], input[type="number"] {
+      padding: .7rem .9rem; font: inherit; color: var(--text);
+      background: rgba(255, 255, 255, .08); border: 1px solid var(--line); border-radius: 12px; color-scheme: dark;
+    }
+    input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 4px rgba(244, 201, 93, .2); }
+    .today-btn {
+      height: 2.6rem; padding: 0 .9rem; border-radius: 12px; font-size: .85rem; font-weight: 600;
+      background: rgba(244, 201, 93, .12); border: 1px solid rgba(244, 201, 93, .5); color: var(--gold);
+    }
+    .today-btn:hover { background: rgba(244, 201, 93, .22); }
+    .day-label { color: var(--muted); font-size: .9rem; }
+    .day-label strong { color: var(--text); }
+
+    /* ---------- Progresso ---------- */
+    .progress-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: .6rem; flex-wrap: wrap; gap: .4rem; }
+    .progress-top .amount { font-family: var(--font-title); font-size: 1.6rem; }
+    .progress-top .amount small { font-family: var(--font-body); font-size: .9rem; color: var(--muted); font-weight: 600; }
+    .progress-top .pct { color: var(--gold); font-weight: 700; }
+    .track { height: 14px; border-radius: 10px; background: rgba(255, 255, 255, .1); overflow: hidden; }
+    .track i { display: block; height: 100%; width: 0; border-radius: 10px; background: linear-gradient(90deg, var(--accent), var(--gold)); transition: width .35s; }
+    .track.complete i { background: var(--ok); }
+    .goal-row { display: flex; align-items: center; gap: .6rem; margin-top: 1rem; flex-wrap: wrap; }
+    .goal-row label { color: var(--muted); font-size: .85rem; font-weight: 600; }
+    .goal-row input { width: 7rem; }
+
+    /* ---------- Registrar consumo ---------- */
+    .presets { display: flex; gap: .6rem; flex-wrap: wrap; }
+    .preset {
+      padding: .7rem 1.1rem; border-radius: 12px; font-weight: 700; border: 1px solid var(--line);
+      background: var(--glass-strong); color: var(--text); transition: transform .15s, border-color .15s, background .15s;
+    }
+    .preset:hover { transform: translateY(-2px); border-color: var(--accent); background: rgba(46, 167, 201, .18); }
+    .custom-row { display: flex; gap: .6rem; margin-top: .9rem; flex-wrap: wrap; }
+    .custom-row input { width: 7rem; }
+
+    .btn {
+      padding: .75rem 1.2rem; border-radius: 12px; font-weight: 700; border: 1px solid var(--accent);
+      background: var(--accent); color: #fff; transition: transform .2s, box-shadow .2s, background .2s;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(46, 167, 201, .35); background: var(--accent-dark); }
+    .btn.ghost { background: var(--glass); border-color: var(--line); color: var(--text); font-weight: 600; box-shadow: none; }
+    .btn.ghost:hover { border-color: rgba(255, 255, 255, .32); background: var(--glass-strong); transform: translateY(-2px); box-shadow: none; }
+    .btn.small { padding: .55rem .95rem; font-size: .85rem; }
+
+    /* ---------- Desde o último gole ---------- */
+    .last-drink { text-align: center; }
+    .last-drink .elapsed { font-family: var(--font-title); font-size: 2.1rem; letter-spacing: .03em; font-variant-numeric: tabular-nums; }
+    .last-drink .elapsed.stale { color: var(--gold); }
+    .last-drink .sub { margin: .3rem 0 0; color: var(--muted); font-size: .88rem; }
+
+    /* ---------- Histórico ---------- */
+    .entries { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+    .entry {
+      display: flex; align-items: center; gap: .8rem; padding: .7rem .9rem; border-radius: 14px;
+      background: rgba(255, 255, 255, .05); border: 1px solid var(--line); animation: pop .25s ease;
+    }
+    @keyframes pop { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .entry .drop { font-size: 1.1rem; }
+    .entry .ml { font-weight: 700; flex: 0 0 auto; }
+    .entry .time { color: var(--muted); font-size: .85rem; flex: 1; }
+    .mini {
+      width: 2rem; height: 2rem; display: grid; place-items: center; border-radius: 8px; border: 0;
+      background: transparent; color: var(--muted); font-size: .95rem;
+    }
+    .mini:hover { color: #fff; background: rgba(230, 57, 70, .55); }
+
+    .empty { text-align: center; color: var(--muted); padding: 1.4rem .5rem .4rem; margin: 0; }
+    .empty b { display: block; font-size: 1.8rem; margin-bottom: .25rem; }
+    .empty[hidden] { display: none; }
+
+    .panel-foot { display: flex; justify-content: flex-end; margin-top: 1rem; }
+
+    .toast {
+      position: fixed; left: 50%; bottom: 1.25rem; transform: translate(-50%, 20px); opacity: 0; pointer-events: none;
+      padding: .7rem 1.1rem; border-radius: 12px; font-size: .9rem; font-weight: 600;
+      background: #15232a; border: 1px solid var(--line); box-shadow: 0 12px 30px rgba(0, 0, 0, .5);
+      transition: opacity .25s, transform .25s; max-width: calc(100% - 2rem); text-align: center; z-index: 60;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    @media (max-width: 420px) { .card { padding: 1.1rem; } }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+
+    <header class="hero">
+      <span class="kicker">Hidratação</span>
+      <h1>Tela de água</h1>
+      <nav class="topnav" aria-label="Outras páginas">
+        <a class="chip" href="index.html">← Início</a>
+        <a class="chip" href="Ferramentas.html">🧮 Ferramentas úteis</a>
+        <a class="chip" href="cheklist.html">✅ Checklist</a>
+        <a class="chip" href="calendario.html">📅 Calendário</a>
+      </nav>
+    </header>
+
+    <p class="banner" id="storageBanner" role="alert" hidden>
+      ⚠️ Seu navegador está bloqueando o armazenamento local (modo privado ou cookies desativados). Os registros
+      funcionam, mas somem ao fechar a página.
+    </p>
+
+    <section class="card" aria-label="Dia selecionado">
+      <div class="day-row">
+        <label class="sr-only" for="dayPicker">Escolher dia</label>
+        <input type="date" id="dayPicker">
+        <button class="today-btn" id="goToday" type="button">Hoje</button>
+        <span class="day-label" id="dayLabel"></span>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="t-progress">
+      <h2 id="t-progress">Progresso do dia</h2>
+      <div class="progress-top">
+        <span class="amount" id="amountText">0 <small>ml</small></span>
+        <span class="pct" id="pctText">0%</span>
+      </div>
+      <div class="track" id="track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Progresso da meta diária"><i id="trackFill"></i></div>
+      <div class="goal-row">
+        <label for="goalInput">Meta diária (ml)</label>
+        <input type="number" id="goalInput" min="250" max="10000" step="50">
+        <button class="btn ghost small" id="saveGoal" type="button">Salvar meta</button>
+      </div>
+    </section>
+
+    <section class="card last-drink" aria-label="Tempo desde o último gole">
+      <div class="elapsed" id="elapsedText">—</div>
+      <p class="sub" id="elapsedSub">Nenhum registro ainda.</p>
+    </section>
+
+    <section class="card" aria-labelledby="t-add">
+      <h2 id="t-add">Registrar consumo</h2>
+      <p class="hint">Toque em uma quantidade ou informe um valor personalizado.</p>
+      <div class="presets">
+        <button class="preset" type="button" data-ml="200">🥤 200 ml</button>
+        <button class="preset" type="button" data-ml="300">🥛 300 ml</button>
+        <button class="preset" type="button" data-ml="500">💧 500 ml</button>
+        <button class="preset" type="button" data-ml="1000">🫙 1000 ml</button>
+      </div>
+      <div class="custom-row">
+        <label class="sr-only" for="customMl">Quantidade personalizada em ml</label>
+        <input type="number" id="customMl" min="1" max="5000" step="10" placeholder="ml" value="250">
+        <button class="btn small" id="addCustom" type="button">Adicionar</button>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="t-history">
+      <h2 id="t-history">Histórico do dia</h2>
+      <ul class="entries" id="entries"></ul>
+      <p class="empty" id="emptyEntries"><b>💧</b>Nenhum registro neste dia.<br>Adicione um acima para começar.</p>
+      <div class="panel-foot">
+        <button class="btn ghost small" id="clearDay" type="button">Limpar dia</button>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    'use strict';
+
+    const STORAGE_KEY = 'aguaRegistros:v1';
+    const DEFAULT_GOAL = 2000;
+    const $ = (s) => document.querySelector(s);
+    const pad = (n) => String(n).padStart(2, '0');
+
+    const toKey = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    const fromKey = (key) => { const [y, m, d] = key.split('-').map(Number); return new Date(y, m - 1, d); };
+    const isKey = (k) => /^\d{4}-\d{2}-\d{2}$/.test(k) && toKey(fromKey(k)) === k;
+    const hojeKey = toKey(new Date());
+
+    /* ---------- Armazenamento seguro ---------- */
+    let storageOk = true;
+    let state = { v: 1, goalMl: DEFAULT_GOAL, days: {} };
+
+    function newId() {
+      return (crypto.randomUUID ? crypto.randomUUID() : `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`);
+    }
+
+    function sanitize(raw) {
+      const goalMl = raw && Number.isFinite(raw.goalMl) && raw.goalMl > 0 ? raw.goalMl : DEFAULT_GOAL;
+      const days = {};
+      const source = raw && typeof raw === 'object' && raw.days && typeof raw.days === 'object' ? raw.days : {};
+      for (const [key, list] of Object.entries(source)) {
+        if (!isKey(key) || !Array.isArray(list)) continue;
+        const entradas = list
+          .filter((e) => e && Number.isFinite(e.ml) && e.ml > 0 && typeof e.createdAt === 'string')
+          .map((e) => ({
+            id: typeof e.id === 'string' && e.id ? e.id : newId(),
+            ml: Math.round(e.ml),
+            createdAt: e.createdAt,
+          }));
+        if (entradas.length) days[key] = entradas;
+      }
+      return { v: 1, goalMl, days };
+    }
+
+    function load() {
+      try {
+        const text = localStorage.getItem(STORAGE_KEY);
+        state = sanitize(text ? JSON.parse(text) : null);
+      } catch {
+        state = sanitize(null);
+      }
+    }
+
+    function persist() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        storageOk = true;
+      } catch {
+        storageOk = false;
+      }
+      $('#storageBanner').hidden = storageOk;
+    }
+
+    /* ---------- Toast ---------- */
+    let toastTimer = null;
+    function showToast(msg) {
+      const toast = $('#toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    /* ---------- Dia selecionado ---------- */
+    let diaAtual = hojeKey;
+
+    function formatarDia(key) {
+      const d = fromKey(key);
+      const texto = d.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      return texto.charAt(0).toUpperCase() + texto.slice(1);
+    }
+
+    function irParaDia(key) {
+      if (!isKey(key)) return;
+      diaAtual = key;
+      $('#dayPicker').value = key;
+      renderizar();
+    }
+
+    /* ---------- Render ---------- */
+    function renderizar() {
+      const entradas = (state.days[diaAtual] || []).slice().sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+      const total = entradas.reduce((soma, e) => soma + e.ml, 0);
+      const meta = state.goalMl;
+      const pct = Math.min(100, Math.round((total / meta) * 100));
+
+      $('#dayLabel').innerHTML = diaAtual === hojeKey ? `<strong>Hoje</strong> · ${formatarDia(diaAtual)}` : formatarDia(diaAtual);
+      $('#amountText').innerHTML = `${total} <small>/ ${meta} ml</small>`;
+      $('#pctText').textContent = `${pct}%`;
+      $('#trackFill').style.width = `${pct}%`;
+      $('#track').setAttribute('aria-valuenow', String(pct));
+      $('#track').classList.toggle('complete', pct >= 100);
+      $('#goalInput').value = meta;
+
+      const lista = $('#entries');
+      lista.innerHTML = '';
+      entradas.forEach((e) => {
+        const li = document.createElement('li');
+        li.className = 'entry';
+
+        const drop = document.createElement('span');
+        drop.className = 'drop';
+        drop.textContent = '💧';
+        li.appendChild(drop);
+
+        const ml = document.createElement('span');
+        ml.className = 'ml';
+        ml.textContent = `${e.ml} ml`;
+        li.appendChild(ml);
+
+        const hora = document.createElement('span');
+        hora.className = 'time';
+        hora.textContent = new Date(e.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        li.appendChild(hora);
+
+        const del = document.createElement('button');
+        del.className = 'mini';
+        del.type = 'button';
+        del.title = 'Remover registro';
+        del.setAttribute('aria-label', `Remover registro de ${e.ml} ml`);
+        del.textContent = '✕';
+        del.addEventListener('click', () => removerEntrada(e.id));
+        li.appendChild(del);
+
+        lista.appendChild(li);
+      });
+      $('#emptyEntries').hidden = entradas.length > 0;
+
+      atualizarTempoDesdeUltimoGole();
+    }
+
+    function atualizarTempoDesdeUltimoGole() {
+      const entradas = state.days[diaAtual] || [];
+      if (diaAtual !== hojeKey) {
+        $('#elapsedText').textContent = '—';
+        $('#elapsedSub').textContent = 'O cronômetro só acompanha o dia de hoje.';
+        $('#elapsedText').classList.remove('stale');
+        return;
+      }
+      if (!entradas.length) {
+        $('#elapsedText').textContent = '—';
+        $('#elapsedSub').textContent = 'Nenhum registro ainda hoje. Adicione o primeiro acima!';
+        $('#elapsedText').classList.remove('stale');
+        return;
+      }
+      const ultima = entradas.reduce((max, e) => (e.createdAt > max.createdAt ? e : max), entradas[0]);
+      const diffMs = Date.now() - new Date(ultima.createdAt).getTime();
+      const totalSeg = Math.max(0, Math.floor(diffMs / 1000));
+      const h = Math.floor(totalSeg / 3600);
+      const m = Math.floor((totalSeg % 3600) / 60);
+      const s = totalSeg % 60;
+      $('#elapsedText').textContent = `${h}h ${pad(m)}m ${pad(s)}s`;
+      $('#elapsedSub').textContent = `Desde o último gole de ${ultima.ml} ml`;
+      $('#elapsedText').classList.toggle('stale', totalSeg >= 3600);
+    }
+
+    /* ---------- Ações ---------- */
+    function adicionarEntrada(ml) {
+      if (!Number.isFinite(ml) || ml <= 0) return;
+      const lista = state.days[diaAtual] || (state.days[diaAtual] = []);
+      lista.push({ id: newId(), ml: Math.round(ml), createdAt: new Date().toISOString() });
+      persist();
+      renderizar();
+      showToast(`+${Math.round(ml)} ml adicionados.`);
+    }
+
+    function removerEntrada(id) {
+      const lista = state.days[diaAtual];
+      if (!lista) return;
+      const idx = lista.findIndex((e) => e.id === id);
+      if (idx === -1) return;
+      lista.splice(idx, 1);
+      if (!lista.length) delete state.days[diaAtual];
+      persist();
+      renderizar();
+      showToast('Registro removido.');
+    }
+
+    function limparDia() {
+      if (!state.days[diaAtual]) return;
+      if (!confirm('Tem certeza que deseja limpar todos os registros deste dia?')) return;
+      delete state.days[diaAtual];
+      persist();
+      renderizar();
+      showToast('Dia limpo.');
+    }
+
+    function salvarMeta() {
+      const valor = Number($('#goalInput').value);
+      if (!Number.isFinite(valor) || valor < 250) {
+        showToast('Informe uma meta válida (mínimo 250 ml).');
+        return;
+      }
+      state.goalMl = Math.round(valor);
+      persist();
+      renderizar();
+      showToast('Meta salva.');
+    }
+
+    /* ---------- Eventos ---------- */
+    document.querySelectorAll('.preset').forEach((btn) => {
+      btn.addEventListener('click', () => adicionarEntrada(Number(btn.dataset.ml)));
+    });
+    $('#addCustom').addEventListener('click', () => {
+      const valor = Number($('#customMl').value);
+      adicionarEntrada(valor);
+    });
+    $('#customMl').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') $('#addCustom').click();
+    });
+    $('#saveGoal').addEventListener('click', salvarMeta);
+    $('#clearDay').addEventListener('click', limparDia);
+    $('#dayPicker').addEventListener('change', (e) => irParaDia(e.target.value));
+    $('#goToday').addEventListener('click', () => irParaDia(hojeKey));
+
+    /* ---------- Início ---------- */
+    load();
+    persist();
+    $('#dayPicker').value = diaAtual;
+    renderizar();
+    setInterval(atualizarTempoDesdeUltimoGole, 1000);
+  </script>
+</body>
+</html>
