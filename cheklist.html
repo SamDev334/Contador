@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Checklist diário com calendário: escolha um dia, escreva suas tarefas e marque o que já fez. Tudo salvo no seu navegador.">
+  <meta name="theme-color" content="#120e10">
+  <title>Checklist diário</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #120e10;
+      --glass: rgba(255, 255, 255, .06);
+      --glass-strong: rgba(255, 255, 255, .1);
+      --line: rgba(255, 255, 255, .13);
+      --text: #f6efef;
+      --muted: #b9aaad;
+      --accent: #e63946;
+      --gold: #f4c95d;
+      --ok: #62d394;
+      --font-title: 'Cinzel', Georgia, serif;
+      --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { color-scheme: dark; }
+    body {
+      margin: 0; min-height: 100vh; color: var(--text); font-family: var(--font-body); line-height: 1.5;
+      background:
+        radial-gradient(900px 500px at 12% -10%, rgba(230, 57, 70, .22), transparent 60%),
+        radial-gradient(700px 420px at 100% 0%, rgba(244, 201, 93, .12), transparent 60%),
+        var(--bg);
+      background-attachment: fixed;
+    }
+    button { font: inherit; color: inherit; cursor: pointer; }
+    :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+    .page { width: min(1080px, 100% - 2rem); margin: 0 auto; padding: 2rem 0 3rem; }
+
+    /* ---------- Cabeçalho ---------- */
+    .hero { text-align: center; margin-bottom: 1.75rem; }
+    .kicker { display: inline-block; font-size: .72rem; letter-spacing: .28em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+    h1 { margin: .35rem 0 1rem; font-family: var(--font-title); font-size: clamp(1.9rem, 5vw, 2.8rem); letter-spacing: .03em; }
+    .topnav { display: flex; gap: .5rem; justify-content: center; flex-wrap: wrap; }
+    .chip {
+      display: inline-flex; align-items: center; gap: .35rem; padding: .45rem .95rem; border-radius: 999px;
+      font-size: .85rem; font-weight: 600; text-decoration: none; color: var(--text);
+      background: var(--glass); border: 1px solid var(--line); transition: transform .2s, border-color .2s;
+    }
+    .chip:hover { transform: translateY(-2px); border-color: rgba(255, 255, 255, .32); }
+
+    /* ---------- Layout ---------- */
+    .layout { display: grid; gap: 1.25rem; grid-template-columns: minmax(0, 1fr); align-items: start; }
+    @media (min-width: 900px) {
+      .layout { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+      .day-panel { position: sticky; top: 1rem; }
+      .day { height: auto; aspect-ratio: 1 / 1; }
+    }
+
+    .card {
+      padding: 1.25rem; border-radius: 20px; background: var(--glass); border: 1px solid var(--line);
+      backdrop-filter: blur(10px); box-shadow: 0 18px 40px rgba(0, 0, 0, .28);
+    }
+
+    .banner {
+      margin: 0 0 1rem; padding: .75rem 1rem; border-radius: 12px; font-size: .88rem; font-weight: 600;
+      background: rgba(230, 57, 70, .15); border: 1px solid rgba(230, 57, 70, .55); color: #ffb3b9;
+    }
+    .banner[hidden] { display: none; }
+
+    /* ---------- Calendário ---------- */
+    .cal-head { display: flex; align-items: center; gap: .5rem; margin-bottom: 1rem; }
+    .cal-title { flex: 1; margin: 0; text-align: center; font-family: var(--font-title); font-size: 1.25rem; }
+    .cal-title::first-letter, .day-title::first-letter { text-transform: uppercase; }
+    .icon-btn {
+      width: 2.5rem; height: 2.5rem; display: grid; place-items: center; border-radius: 12px; font-size: 1.1rem;
+      background: var(--glass); border: 1px solid var(--line); transition: background .2s, border-color .2s;
+    }
+    .icon-btn:hover { background: var(--glass-strong); border-color: rgba(255, 255, 255, .32); }
+    .today-btn {
+      height: 2.5rem; padding: 0 .9rem; border-radius: 12px; font-size: .85rem; font-weight: 600;
+      background: rgba(244, 201, 93, .12); border: 1px solid rgba(244, 201, 93, .5); color: var(--gold);
+    }
+    .today-btn:hover { background: rgba(244, 201, 93, .22); }
+
+    .weekdays, .grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .35rem; }
+    .weekdays { margin-bottom: .35rem; }
+    .weekdays span { text-align: center; font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding: .2rem 0; }
+
+    .day {
+      position: relative; height: 3.5rem; min-width: 0; padding: .3rem .25rem .45rem;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .1rem;
+      border-radius: 14px; background: rgba(255, 255, 255, .04); border: 1px solid transparent;
+      transition: background .15s, border-color .15s, transform .15s;
+    }
+    .day:hover { background: var(--glass-strong); transform: translateY(-1px); }
+    .day.other { opacity: .4; }
+    .day .n { font-weight: 600; font-size: 1rem; font-variant-numeric: tabular-nums; }
+    .day .meta { font-size: .66rem; font-weight: 600; color: var(--muted); min-height: 1em; font-variant-numeric: tabular-nums; }
+    .day .bar { position: absolute; left: .45rem; right: .45rem; bottom: .3rem; height: 3px; border-radius: 3px; background: rgba(255, 255, 255, .1); overflow: hidden; }
+    .day .bar i { display: block; height: 100%; width: calc(var(--p, 0) * 1%); background: var(--gold); transition: width .3s; }
+    .day.complete .bar i { background: var(--ok); }
+    .day.complete .meta { color: var(--ok); }
+    .day.today { border-color: var(--gold); }
+    .day.today .n { color: var(--gold); }
+    .day.selected {
+      background: var(--accent); border-color: var(--accent); box-shadow: 0 10px 22px rgba(230, 57, 70, .4);
+    }
+    .day.selected .n, .day.selected .meta { color: #fff; }
+    .day.selected .bar { background: rgba(255, 255, 255, .3); }
+    .day.selected .bar i { background: #fff; }
+
+    .legend { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1rem 0 0; padding: 0; list-style: none; font-size: .78rem; color: var(--muted); }
+    .legend li { display: inline-flex; align-items: center; gap: .4rem; }
+    .legend b { width: .7rem; height: .7rem; border-radius: 50%; display: inline-block; }
+
+    /* ---------- Painel do dia ---------- */
+    .day-title { margin: 0; font-family: var(--font-title); font-size: 1.35rem; }
+    .day-sub { margin: .15rem 0 0; color: var(--muted); font-size: .88rem; }
+    .progress { margin: 1rem 0 1.1rem; }
+    .progress-top { display: flex; justify-content: space-between; font-size: .82rem; font-weight: 600; color: var(--muted); margin-bottom: .4rem; }
+    .progress-top strong { color: var(--gold); }
+    .track { height: 8px; border-radius: 8px; background: rgba(255, 255, 255, .1); overflow: hidden; }
+    .track i { display: block; height: 100%; width: 0; border-radius: 8px; background: linear-gradient(90deg, var(--accent), var(--gold)); transition: width .35s; }
+    .track.complete i { background: var(--ok); }
+
+    .add-row { display: flex; gap: .6rem; }
+    input[type="text"] {
+      flex: 1; min-width: 0; padding: .8rem 1rem; font: inherit; color: var(--text);
+      background: rgba(255, 255, 255, .08); border: 1px solid var(--line); border-radius: 12px;
+    }
+    input[type="text"]::placeholder { color: rgba(185, 170, 173, .8); }
+    input[type="text"]:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 4px rgba(244, 201, 93, .2); }
+
+    .btn {
+      padding: .75rem 1.2rem; border-radius: 12px; font-weight: 700; border: 1px solid var(--accent);
+      background: var(--accent); color: #fff; transition: transform .2s, box-shadow .2s, background .2s;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(230, 57, 70, .35); }
+    .btn.ghost { background: var(--glass); border-color: var(--line); color: var(--text); font-weight: 600; }
+    .btn.ghost:hover { box-shadow: none; border-color: rgba(255, 255, 255, .32); background: var(--glass-strong); }
+    .btn.small { padding: .5rem .9rem; font-size: .85rem; }
+
+    .tasks { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: .5rem; }
+    .task {
+      display: flex; align-items: center; gap: .7rem; padding: .7rem .8rem; border-radius: 14px;
+      background: rgba(255, 255, 255, .06); border: 1px solid var(--line); animation: pop .25s ease;
+    }
+    @keyframes pop { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .task.done { background: rgba(98, 211, 148, .07); border-color: rgba(98, 211, 148, .28); }
+
+    .check {
+      flex: 0 0 auto; width: 1.6rem; height: 1.6rem; border-radius: 8px; display: grid; place-items: center;
+      background: transparent; border: 2px solid rgba(255, 255, 255, .35); color: transparent; font-weight: 800; font-size: .95rem;
+      transition: background .15s, border-color .15s, color .15s, transform .15s;
+    }
+    .check:hover { border-color: var(--gold); transform: scale(1.06); }
+    .task.done .check { background: var(--ok); border-color: var(--ok); color: #0c1a12; }
+
+    .task-text { flex: 1; min-width: 0; overflow-wrap: anywhere; cursor: pointer; padding: .15rem 0; }
+    .task.done .task-text { text-decoration: line-through; color: var(--muted); }
+    .task input[type="text"] { padding: .45rem .7rem; }
+
+    .task-actions { display: flex; gap: .15rem; flex: 0 0 auto; }
+    .mini {
+      width: 2rem; height: 2rem; display: grid; place-items: center; border-radius: 8px; border: 0;
+      background: transparent; color: var(--muted); font-size: .95rem;
+    }
+    .mini:hover { color: #fff; background: rgba(255, 255, 255, .12); }
+    .mini.del:hover { background: var(--accent); }
+
+    .empty { text-align: center; color: var(--muted); padding: 1.6rem .5rem .6rem; margin: 0; }
+    .empty b { display: block; font-size: 1.8rem; margin-bottom: .25rem; }
+    .empty[hidden] { display: none; }
+    .panel-foot { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: 1.1rem; }
+
+    /* ---------- Backup ---------- */
+    .backup { margin-top: 1.25rem; display: flex; gap: 1rem; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+    .backup p { margin: 0; color: var(--muted); font-size: .85rem; max-width: 46ch; }
+    .backup p strong { color: var(--text); }
+    .backup .actions { display: flex; gap: .6rem; flex-wrap: wrap; }
+    .toast {
+      position: fixed; left: 50%; bottom: 1.25rem; transform: translate(-50%, 20px); opacity: 0; pointer-events: none;
+      padding: .7rem 1.1rem; border-radius: 12px; font-size: .9rem; font-weight: 600;
+      background: #241a1d; border: 1px solid var(--line); box-shadow: 0 12px 30px rgba(0, 0, 0, .5);
+      transition: opacity .25s, transform .25s; max-width: calc(100% - 2rem); text-align: center;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    @media (max-width: 420px) { .day .meta { display: none; } .grid, .weekdays { gap: .25rem; } .card { padding: 1rem; } }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+
+    <header class="hero">
+      <span class="kicker">Planejador</span>
+      <h1>Checklist diário</h1>
+      <nav class="topnav" aria-label="Outras páginas">
+        <a class="chip" href="index.html">← Início</a>
+        <a class="chip" href="ferramentas.html">🧰 Ferramentas</a>
+      </nav>
+    </header>
+
+    <p class="banner" id="storageBanner" role="alert" hidden>
+      ⚠️ Seu navegador está bloqueando o armazenamento local (modo privado ou cookies desativados). As tarefas
+      funcionam, mas somem ao fechar a página. Use “Exportar” para guardar uma cópia.
+    </p>
+
+    <div class="layout">
+
+      <!-- Calendário -->
+      <section class="card" aria-labelledby="calTitle">
+        <div class="cal-head">
+          <button class="icon-btn" id="prevMonth" type="button" aria-label="Mês anterior">‹</button>
+          <h2 class="cal-title" id="calTitle" aria-live="polite"></h2>
+          <button class="icon-btn" id="nextMonth" type="button" aria-label="Próximo mês">›</button>
+          <button class="today-btn" id="goToday" type="button">Hoje</button>
+        </div>
+        <div class="weekdays" aria-hidden="true">
+          <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span>
+        </div>
+        <div class="grid" id="grid" role="group" aria-label="Dias do mês. Use as setas do teclado para mudar de dia."></div>
+        <ul class="legend" aria-label="Legenda">
+          <li><b style="background:transparent;border:2px solid var(--gold)"></b> Hoje</li>
+          <li><b style="background:var(--accent)"></b> Dia selecionado</li>
+          <li><b style="background:var(--gold)"></b> Tarefas pendentes</li>
+          <li><b style="background:var(--ok)"></b> Tudo concluído</li>
+        </ul>
+      </section>
+
+      <!-- Dia selecionado -->
+      <section class="card day-panel" aria-labelledby="dayTitle">
+        <h2 class="day-title" id="dayTitle"></h2>
+        <p class="day-sub" id="daySub"></p>
+
+        <div class="progress">
+          <div class="progress-top"><span id="progressLabel">Sem tarefas</span><strong id="progressPct">0%</strong></div>
+          <div class="track" id="track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Progresso do dia"><i></i></div>
+        </div>
+
+        <form class="add-row" id="addForm" autocomplete="off">
+          <label class="sr-only" for="taskInput">Nova tarefa</label>
+          <input type="text" id="taskInput" placeholder="O que você precisa fazer neste dia?" maxlength="200">
+          <button class="btn" type="submit">Adicionar</button>
+        </form>
+
+        <ul class="tasks" id="tasks"></ul>
+        <p class="empty" id="empty"><b>📝</b>Nenhuma tarefa neste dia.<br>Escreva acima para começar.</p>
+
+        <div class="panel-foot">
+          <button class="btn ghost small" id="clearDone" type="button">Limpar concluídas</button>
+          <button class="btn ghost small" id="uncheckAll" type="button">Desmarcar todas</button>
+        </div>
+      </section>
+    </div>
+
+    <section class="card backup" aria-label="Backup">
+      <p><strong>Salvo automaticamente neste navegador.</strong> Para não perder nada ao trocar de aparelho ou limpar os dados, exporte uma cópia de segurança.</p>
+      <div class="actions">
+        <button class="btn ghost small" id="exportBtn" type="button">⬇️ Exportar</button>
+        <button class="btn ghost small" id="importBtn" type="button">⬆️ Importar</button>
+        <input type="file" id="importFile" accept="application/json,.json" hidden>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+'use strict';
+
+/* ==========================================================
+   Checklist diário – calendário + tarefas por dia
+   Dados: { v: 1, days: { "AAAA-MM-DD": [ { id, text, done } ] } }
+   ========================================================== */
+
+const STORAGE_KEY = 'checklistDias:v1';
+const MAX_TEXT = 200;
+const $ = (s) => document.querySelector(s);
+const pad = (n) => String(n).padStart(2, '0');
+
+/* ---------- Datas (sempre no horário LOCAL) ---------- */
+const toKey = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const fromKey = (key) => { const [y, m, d] = key.split('-').map(Number); return new Date(y, m - 1, d); };
+const isKey = (k) => /^\d{4}-\d{2}-\d{2}$/.test(k) && toKey(fromKey(k)) === k;
+
+/* ---------- Armazenamento seguro ---------- */
+let storageOk = true;
+
+function sanitize(raw) {
+  const days = {};
+  const source = raw && typeof raw === 'object' && raw.days && typeof raw.days === 'object' ? raw.days : {};
+  for (const [key, list] of Object.entries(source)) {
+    if (!isKey(key) || !Array.isArray(list)) continue;
+    const tasks = list
+      .filter((t) => t && typeof t.text === 'string' && t.text.trim())
+      .map((t) => ({
+        id: typeof t.id === 'string' && t.id ? t.id : newId(),
+        text: t.text.trim().slice(0, MAX_TEXT),
+        done: Boolean(t.done),
+      }));
+    if (tasks.length) days[key] = tasks;
+  }
+  return { v: 1, days };
+}
+
+function load() {
+  try {
+    const text = localStorage.getItem(STORAGE_KEY);
+    return sanitize(text ? JSON.parse(text) : null);
+  } catch {
+    return sanitize(null);        // JSON corrompido ou storage bloqueado: começa limpo, sem quebrar a página
+  }
+}
+
+function save() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    storageOk = true;
+  } catch {
+    storageOk = false;
+  }
+  $('#storageBanner').hidden = storageOk;
+}
+
+function newId() {
+  return (crypto.randomUUID ? crypto.randomUUID() : `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`);
+}
+
+/* ---------- Estado ---------- */
+let state = load();
+const today = new Date();
+let selected = toKey(today);
+let view = { y: today.getFullYear(), m: today.getMonth() };
+
+const tasksOf = (key) => state.days[key] || [];
+const stats = (key) => {
+  const list = tasksOf(key);
+  const done = list.filter((t) => t.done).length;
+  return { total: list.length, done, pct: list.length ? Math.round((done / list.length) * 100) : 0 };
+};
+function mutate(key, fn) {
+  const list = tasksOf(key).slice();
+  const next = fn(list) || list;
+  if (next.length) state.days[key] = next; else delete state.days[key];
+  save();
+  render();
+}
+
+/* ---------- Calendário ---------- */
+function renderCalendar() {
+  $('#calTitle').textContent = new Date(view.y, view.m, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+
+  const first = new Date(view.y, view.m, 1);
+  const start = new Date(view.y, view.m, 1 - first.getDay());
+  const todayKey = toKey(new Date());
+  const frag = document.createDocumentFragment();
+
+  for (let i = 0; i < 42; i++) {
+    const date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+    const key = toKey(date);
+    const { total, done, pct } = stats(key);
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'day';
+    btn.dataset.key = key;
+    if (date.getMonth() !== view.m) btn.classList.add('other');
+    if (key === todayKey) btn.classList.add('today');
+    if (key === selected) btn.classList.add('selected');
+    if (total && done === total) btn.classList.add('complete');
+    btn.setAttribute('aria-pressed', String(key === selected));
+    btn.setAttribute('aria-label',
+      `${date.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}` +
+      (total ? `, ${done} de ${total} tarefas concluídas` : ', sem tarefas') + (key === todayKey ? ', hoje' : ''));
+
+    const n = document.createElement('span');
+    n.className = 'n';
+    n.textContent = date.getDate();
+    const meta = document.createElement('span');
+    meta.className = 'meta';
+    meta.textContent = total ? `${done}/${total}` : '';
+    btn.append(n, meta);
+
+    if (total) {
+      const bar = document.createElement('span');
+      bar.className = 'bar';
+      const fill = document.createElement('i');
+      fill.style.setProperty('--p', pct);
+      bar.append(fill);
+      btn.append(bar);
+    }
+    frag.append(btn);
+  }
+  $('#grid').replaceChildren(frag);
+}
+
+/* ---------- Painel do dia ---------- */
+let editingId = null;
+
+function renderPanel() {
+  const date = fromKey(selected);
+  const isToday = selected === toKey(new Date());
+  $('#dayTitle').textContent = date.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+  $('#daySub').textContent = `${isToday ? 'Hoje · ' : ''}${date.getFullYear()}`;
+
+  const list = tasksOf(selected);
+  const { total, done, pct } = stats(selected);
+
+  $('#progressLabel').textContent = total ? `${done} de ${total} concluída${done === 1 ? '' : 's'}` : 'Sem tarefas';
+  $('#progressPct').textContent = `${pct}%`;
+  const track = $('#track');
+  track.setAttribute('aria-valuenow', pct);
+  track.classList.toggle('complete', total > 0 && done === total);
+  track.firstElementChild.style.width = `${pct}%`;
+
+  const ul = $('#tasks');
+  ul.replaceChildren();
+
+  list.forEach((task) => {
+    const li = document.createElement('li');
+    li.className = 'task' + (task.done ? ' done' : '');
+
+    const check = document.createElement('button');
+    check.type = 'button';
+    check.className = 'check';
+    check.textContent = '✓';
+    check.setAttribute('role', 'checkbox');
+    check.setAttribute('aria-checked', String(task.done));
+    check.setAttribute('aria-label', task.text);
+    check.addEventListener('click', () => mutate(selected, (l) => { const t = l.find((x) => x.id === task.id); if (t) t.done = !t.done; }));
+    li.append(check);
+
+    if (editingId === task.id) {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = task.text;
+      input.maxLength = MAX_TEXT;
+      input.setAttribute('aria-label', 'Editar tarefa');
+      const commit = () => {
+        const text = input.value.trim();
+        editingId = null;
+        if (!text) return render();
+        mutate(selected, (l) => { const t = l.find((x) => x.id === task.id); if (t) t.text = text; });
+      };
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); commit(); }
+        if (e.key === 'Escape') { editingId = null; render(); }
+      });
+      input.addEventListener('blur', () => { if (editingId === task.id) commit(); });
+      li.append(input);
+      ul.append(li);
+      requestAnimationFrame(() => { input.focus(); input.select(); });
+      return;
+    }
+
+    const text = document.createElement('span');
+    text.className = 'task-text';
+    text.textContent = task.text;                        // textContent: nunca interpreta HTML
+    text.addEventListener('click', () => check.click());
+
+    const actions = document.createElement('div');
+    actions.className = 'task-actions';
+    const edit = document.createElement('button');
+    edit.type = 'button'; edit.className = 'mini'; edit.textContent = '✎';
+    edit.setAttribute('aria-label', `Editar "${task.text}"`);
+    edit.addEventListener('click', () => { editingId = task.id; renderPanel(); });
+    const del = document.createElement('button');
+    del.type = 'button'; del.className = 'mini del'; del.textContent = '✕';
+    del.setAttribute('aria-label', `Remover "${task.text}"`);
+    del.addEventListener('click', () => mutate(selected, (l) => l.filter((x) => x.id !== task.id)));
+    actions.append(edit, del);
+
+    li.append(text, actions);
+    ul.append(li);
+  });
+
+  $('#empty').hidden = total > 0;
+  $('#clearDone').disabled = done === 0;
+  $('#uncheckAll').disabled = done === 0;
+  [$('#clearDone'), $('#uncheckAll')].forEach((b) => { b.style.opacity = b.disabled ? .45 : 1; b.style.cursor = b.disabled ? 'default' : 'pointer'; });
+}
+
+function render() { renderCalendar(); renderPanel(); }
+
+/* ---------- Navegação ---------- */
+function selectDay(key, { focus = false } = {}) {
+  selected = key;
+  editingId = null;
+  const d = fromKey(key);
+  view = { y: d.getFullYear(), m: d.getMonth() };      // dia de outro mês leva o calendário até ele
+  render();
+  if (focus) $(`.day[data-key="${key}"]`)?.focus();
+}
+
+function shiftMonth(delta) {
+  const d = new Date(view.y, view.m + delta, 1);
+  view = { y: d.getFullYear(), m: d.getMonth() };
+  renderCalendar();
+}
+
+/* ---------- Toast ---------- */
+let toastTimer;
+function toast(message) {
+  const el = $('#toast');
+  el.textContent = message;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+/* ---------- Eventos ---------- */
+$('#prevMonth').addEventListener('click', () => shiftMonth(-1));
+$('#nextMonth').addEventListener('click', () => shiftMonth(1));
+$('#goToday').addEventListener('click', () => selectDay(toKey(new Date())));
+
+$('#grid').addEventListener('click', (e) => {
+  const btn = e.target.closest('.day');
+  if (btn) { selectDay(btn.dataset.key); $('#taskInput').focus({ preventScroll: true }); }
+});
+
+$('#grid').addEventListener('keydown', (e) => {
+  const step = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 }[e.key];
+  if (!step) return;
+  e.preventDefault();
+  const d = fromKey(selected);
+  d.setDate(d.getDate() + step);
+  selectDay(toKey(d), { focus: true });
+});
+
+$('#addForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const input = $('#taskInput');
+  const text = input.value.trim().slice(0, MAX_TEXT);
+  if (!text) { input.focus(); return; }
+  input.value = '';
+  mutate(selected, (l) => { l.push({ id: newId(), text, done: false }); });
+  $('#taskInput').focus({ preventScroll: true });
+});
+
+$('#clearDone').addEventListener('click', () => {
+  mutate(selected, (l) => l.filter((t) => !t.done));
+  toast('Tarefas concluídas removidas.');
+});
+$('#uncheckAll').addEventListener('click', () => mutate(selected, (l) => { l.forEach((t) => { t.done = false; }); }));
+
+/* ---------- Backup ---------- */
+$('#exportBtn').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `checklist-backup-${toKey(new Date())}.json`;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast('Backup exportado.');
+});
+
+$('#importBtn').addEventListener('click', () => $('#importFile').click());
+$('#importFile').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  try {
+    const incoming = sanitize(JSON.parse(await file.text()));
+    const count = Object.keys(incoming.days).length;
+    if (!count) throw new Error('vazio');
+    if (!confirm(`Importar ${count} dia(s) com tarefas? Isso substitui o que está salvo agora.`)) return;
+    state = incoming;
+    save();
+    render();
+    toast('Backup importado.');
+  } catch {
+    toast('Arquivo inválido: não foi possível importar.');
+  }
+});
+
+/* Sincroniza se o checklist for alterado em outra aba */
+window.addEventListener('storage', (e) => {
+  if (e.key !== STORAGE_KEY) return;
+  state = load();
+  render();
+});
+
+/* Se a página ficar aberta de um dia para o outro, atualiza o destaque de "hoje" */
+let lastDay = toKey(new Date());
+setInterval(() => {
+  const now = toKey(new Date());
+  if (now !== lastDay) { lastDay = now; renderCalendar(); renderPanel(); }
+}, 60000);
+
+save();     // grava a versão limpa e mostra o aviso se o armazenamento estiver bloqueado
+render();
+</script>
+</body>
+</html>
