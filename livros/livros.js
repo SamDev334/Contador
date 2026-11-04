@@ -13,8 +13,7 @@
 //
 // Dica: respeite maiúsculas/minúsculas no nome do arquivo. No GitHub Pages isso faz diferença.
 
-
-  const LIVROS = [
+window.LIVROS = [
   {
     id: "ebook.pdf",
     titulo: "Italiano Ebook Completo",
