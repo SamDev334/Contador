@@ -22,4 +22,12 @@ window.LIVROS = [
     arquivo: "ebook.pdf",
     cor: "#c9952e",
   },
+  {
+    id: "manual-epicteto",
+    titulo: "Manual (Enchirídion)",
+    autor: "Epicteto",
+    categoria: "Filosofia",
+    arquivo: "manual-epicteto.pdf",
+    cor: "#7a8fa6",
+  },
 ];
